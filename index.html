@@ -747,6 +747,7 @@
     const DRAFT_STORAGE_KEY = 'nh_evaluation_draft';
     let autoSaveTimeout = null;
     let isLoadingFromDraft = false;
+    let isUpdatingFromHistory = false;
 
     // Get current form state
     function getFormState() {
@@ -1572,12 +1573,14 @@
             }
         }
         if (section.collapsible) {
-            titleWrapper.classList.add('cursor-pointer');
+            titleWrapper.classList.add('cursor-pointer', 'hover:bg-indigo-50', 'transition-colors', 'duration-200', 'rounded-md', 'px-2', '-mx-2');
             const collapseButton = document.createElement('button');
             collapseButton.type = 'button';
             collapseButton.innerHTML = ICONS.MINUS;
             collapseButton.className = 'text-indigo-600 hover:bg-indigo-100 p-1 rounded-full';
             titleWrapper.appendChild(collapseButton);
+            
+            // Make the entire header row clickable (including the title text)
             titleWrapper.addEventListener('click', (e) => {
                 const isCollapsing = contentContainer.classList.toggle('collapsed');
                 collapseButton.innerHTML = isCollapsing ? ICONS.PLUS : ICONS.MINUS;
@@ -1756,7 +1759,11 @@
             const rightCol = document.createElement('div');
             rightCol.className = 'space-y-2';
             
-            fields.forEach((field, index) => {
+            // Separate checkboxes from the notes field
+            const checkboxFields = fields.filter(field => field.type !== 'textarea');
+            const notesField = fields.find(field => field.type === 'textarea');
+            
+            checkboxFields.forEach((field, index) => {
                 const fieldEl = createFieldElement(field, subTitle, { isCriticalBehavior: true });
                 if (index < 12) { // First 12 items in left column
                     leftCol.appendChild(fieldEl);
@@ -1768,6 +1775,15 @@
             grid.appendChild(leftCol);
             grid.appendChild(rightCol);
             fieldsContainer.appendChild(grid);
+            
+            // Add notes field below the grid, spanning full width
+            if (notesField) {
+                const notesContainer = document.createElement('div');
+                notesContainer.className = 'px-3 mt-4';
+                const notesFieldEl = createFieldElement(notesField, subTitle, { isCriticalBehavior: true });
+                notesContainer.appendChild(notesFieldEl);
+                fieldsContainer.appendChild(notesContainer);
+            }
         } else if (subTitle === "CLS Skills Evaluation") {
             const grid = document.createElement('div');
             grid.className = 'grid grid-cols-1 md:grid-cols-2 md:gap-x-6 px-3';
@@ -1809,6 +1825,9 @@
         } else {
             container.className = 'flex flex-col space-y-1';
         }
+        
+        // Determine the field name to use (backendName if available, otherwise use display name)
+        const fieldName = field.backendName || field.name;
         
         // Skip label creation for checkbox fields as they create their own labels
         if (field.type !== 'checkbox' && field.type !== 'checkbox_with_text') {
@@ -1852,7 +1871,7 @@
         switch (field.type) {
             case 'textarea':
                 const textarea = document.createElement('textarea');
-                textarea.name = field.name;
+                textarea.name = fieldName; // Use fieldName instead of field.name
                 textarea.rows = field.rows || 2;
                 textarea.className = baseInputClasses;
                 container.appendChild(textarea);
@@ -1861,7 +1880,7 @@
                 const selectWrapper = document.createElement('div');
                 if (sectionTitle !== 'Sales Skills') { selectWrapper.className = 'flex-grow'; }
                 const select = document.createElement('select');
-                select.name = field.name;
+                select.name = fieldName; // Use fieldName instead of field.name
                 select.className = `${baseInputClasses} custom-select`;
                 const defaultOption = document.createElement('option');
                 defaultOption.textContent = 'Select...';
@@ -1887,7 +1906,7 @@
                 
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
-                checkbox.name = field.name;
+                checkbox.name = fieldName; // Use fieldName instead of field.name
                 checkbox.id = `checkbox-${field.name.replace(/[^a-zA-Z0-9]/g, '-')}`;
                 checkbox.className = 'h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500';
                 
@@ -1935,13 +1954,13 @@
                         const displayValue = opt.trim();
                         const actualValue = opt.trim();
                         
-                        const radioId = `${field.name.replace(/[^a-zA-Z0-9]/g, '-')}-${displayValue}`;
+                        const radioId = `${fieldName.replace(/[^a-zA-Z0-9]/g, '-')}-${displayValue}`;
                         const radioWrapper = document.createElement('div');
                         radioWrapper.className = 'radio-item';
 
                         const radio = document.createElement('input');
                         radio.type = 'radio';
-                        radio.name = field.name;
+                        radio.name = fieldName; // Use fieldName instead of field.name
                         radio.value = actualValue;
                         radio.id = radioId;
                         radio.className = `custom-radio h-3.5 w-3.5 rounded-full border-gray-300 text-indigo-600 focus:ring-indigo-500`;
@@ -1994,7 +2013,7 @@
 
                 const input = document.createElement('input');
                 input.type = field.type;
-                input.name = field.name;
+                input.name = fieldName; // Use fieldName instead of field.name
                 
                 if (field.name === "Sap ID") {
                     input.placeholder = 'Enter Sap ID and press Enter';

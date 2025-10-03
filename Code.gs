@@ -164,7 +164,8 @@ function createEnhancedFormData(formData) {
       unnecessaryConsult: formData["Unnecessary/Invalid Consult, Dispatch or Transfer"] === "on" ? 1 : 0,
       unwillingnessToHelp: formData["Unwillingness to Help"] === "on" ? 1 : 0,
       otherBehavior: formData["Other"] === "on" ? 1 : 0,
-      otherBehaviorText: formData["CB_Other_Behavior_Text"] || ""
+      otherBehaviorText: formData["CB_Other_Behavior_Text"] || "",
+      cbNotes: formData["CB_Notes"] || ""
     },
     
     // Data integrity metadata
@@ -331,6 +332,7 @@ function prepareRowData(enhancedData) {
     enhancedData.criticalBehaviors.unwillingnessToHelp,
     enhancedData.criticalBehaviors.otherBehavior,
     enhancedData.criticalBehaviors.otherBehaviorText,
+    enhancedData.criticalBehaviors.cbNotes,
     
     // Data integrity fields
     enhancedData.dataIntegrity.checksum,
@@ -374,7 +376,7 @@ function setupEnhancedHeaders(sheet) {
     "CB_No_Retention_Value_Generation", "CB_Nonwork_Related_Distractions", "CB_Overtalking_Interrupt_Customer",
     "CB_Proactively_Transferring_Calls", "CB_Staying_Line_Unnecessarily", "CB_System_Tools_Manipulation",
     "CB_Unjustified_Disconnection", "CB_Unnecessary_Invalid_Consult_Transfer", "CB_Unwillingness_To_Help",
-    "CB_Other_Behavior", "CB_Other_Behavior_Text",
+    "CB_Other_Behavior", "CB_Other_Behavior_Text", "CB_Notes",
     
     // Data integrity fields
     "DataChecksum", "FieldCount", "ValidationStatus", "DataQualityScore"
@@ -1091,7 +1093,8 @@ function getFormStructure() {
             { name: "Unjustified disconnection of customer interaction", type: "checkbox" },
             { name: "Unnecessary/Invalid Consult, Dispatch or Transfer", type: "checkbox" },
             { name: "Unwillingness to Help", type: "checkbox" },
-            { name: "Other", type: "checkbox_with_text", textField: "CB_Other_Behavior_Text" }
+            { name: "Other", type: "checkbox_with_text", textField: "CB_Other_Behavior_Text" },
+            { name: "Critical Behavior Notes", type: "textarea", rows: 3, backendName: "CB_Notes" }
           ]
         }
       },
@@ -2208,14 +2211,15 @@ function convertEvaluationToFormData(evaluationData) {
       "CB_Unnecessary_Invalid_Consult_Transfer": "Unnecessary/Invalid Consult, Dispatch or Transfer",
       "CB_Unwillingness_To_Help": "Unwillingness to Help",
       "CB_Other_Behavior": "Other",
-      "CB_Other_Behavior_Text": "CB_Other_Behavior_Text"
+      "CB_Other_Behavior_Text": "CB_Other_Behavior_Text",
+      "CB_Notes": "Critical Behavior Notes"
     };
     
     // Map Critical Behaviors (convert 1 to "on", 0 to unchecked)
     Object.entries(criticalBehaviorMappings).forEach(([spreadsheetColumn, formField]) => {
       if (evaluationData[spreadsheetColumn] !== undefined) {
-        if (formField === "CB_Other_Behavior_Text") {
-          // Text field - map directly
+        if (formField === "CB_Other_Behavior_Text" || formField === "CB_Notes") {
+          // Text/textarea fields - map directly
           formData[formField] = evaluationData[spreadsheetColumn] || "";
         } else {
           // Checkbox - convert 1 to "on", anything else is unchecked
