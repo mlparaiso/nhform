@@ -1,0 +1,3938 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <title>QA Evaluation Form</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    html.modal-open, body.modal-open { overflow: hidden; }
+    .text-11px { font-size: 11px; }
+    .text-10px { font-size: 10px; }
+    .custom-select {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+      background-position: right 0.5rem center;
+      background-repeat: no-repeat;
+      background-size: 1.5em 1.5em;
+      -webkit-appearance: none; -moz-appearance: none; appearance: none;
+      padding-right: 2.5rem;
+    }
+    .custom-radio:checked {
+      background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle cx='8' cy='8' r='3'/%3e%3c/svg%3e");
+      background-color: #6366f1; border-color: #6366f1;
+    }
+    .loader {
+      border: 4px solid #f3f3f3; border-top: 4px solid #6366f1;
+      border-radius: 50%; width: 32px; height: 32px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .collapsible-content { transition: all 0.3s ease-in-out; overflow: hidden; max-height: 4000px; }
+    .collapsible-content.collapsed { max-height: 0; padding-top: 0 !important; padding-bottom: 0 !important; border-top-width: 0 !important; }
+    .ellipsis::after { display: inline-block; animation: ellipsis 1.4s infinite; content: "."; width: 1em; text-align: left; }
+    @keyframes ellipsis { 0% { content: "."; } 33% { content: ".."; } 66% { content: "..."; } }
+
+    /* --- Enhanced Tooltip Styles --- */
+    .tooltip-container {
+      position: relative;
+      cursor: help;
+    }
+    .tooltip-text {
+      visibility: hidden;
+      width: 280px; /* Increased width for more content */
+      background-color: #1f2937; /* gray-800 */
+      color: #fff;
+      text-align: left; /* Align text to the left */
+      border-radius: 6px;
+      padding: 10px;
+      position: absolute;
+      z-index: 50;
+      bottom: 125%;
+      left: 50%;
+      margin-left: -140px; /* Half of the new width */
+      opacity: 0;
+      transition: opacity 0.2s;
+      font-size: 11px;
+      line-height: 1.5;
+      pointer-events: none; /* Allow hovering through the tooltip */
+    }
+    .tooltip-text::after {
+      content: "";
+      position: absolute;
+      top: 100%; left: 50%;
+      margin-left: -5px; border-width: 5px;
+      border-style: solid; border-color: #1f2937 transparent transparent transparent;
+    }
+    .tooltip-container:hover .tooltip-text {
+      visibility: visible;
+      opacity: 1;
+    }
+    .tooltip-text b { color: #a5b4fc; } /* Lighter color for headings */
+    .tooltip-text ul { list-style-type: none; padding-left: 0; margin-top: 4px; }
+    .tooltip-text li { margin-bottom: 2px; }
+    .tooltip-text hr { border-color: #4b5563; margin: 6px 0; }
+
+    /* --- Radio Button Alignment Styles --- */
+    .radio-grid-container {
+      display: grid;
+      grid-template-columns: 65fr 35fr;
+      gap: 1rem;
+      align-items: center;
+      padding: 0.25rem 0;
+    }
+    
+    .radio-button-group {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      justify-items: center;
+      align-items: center;
+      white-space: nowrap;
+      min-width: 100px;
+      width: 100%;
+      padding: 0;
+      margin: 0;
+      overflow: hidden;
+    }
+    
+    .radio-button-group.three-options {
+      grid-template-columns: repeat(3, 1fr);
+      min-width: 80px;
+      padding: 0;
+      margin: 0;
+      overflow: hidden;
+    }
+    
+    .radio-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      padding: 0;
+      margin: 0;
+    }
+    
+    /* Ultra-compact radio button styling */
+    .custom-radio {
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    
+    .custom-radio + label {
+      margin: 0 !important;
+      padding: 0 !important;
+      margin-left: 2px !important;
+    }
+    
+    
+    @media (max-width: 768px) {
+      .radio-grid-container {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+      }
+      
+      .radio-button-group {
+        justify-self: stretch;
+        grid-template-columns: repeat(4, 42px);
+        gap: 0;
+        justify-content: center;
+        min-width: 190px;
+        padding-right: 0.75rem;
+      }
+      
+      .radio-button-group.three-options {
+        grid-template-columns: repeat(3, 42px);
+        min-width: 145px;
+        padding-right: 0.75rem;
+      }
+    }
+
+    /* --- MANDATORY FIELD INDICATORS --- */
+    .required-asterisk {
+      color: #dc2626;
+      font-weight: bold;
+      margin-left: 2px;
+    }
+
+    .mandatory-badge {
+      background: #dc2626;
+      color: white;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 12px;
+      margin-left: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .mandatory-legend {
+      background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+      border: 1px solid #fecaca;
+      color: #991b1b;
+    }
+
+    /* --- ELEGANT ERROR PANEL --- */
+    .error-panel {
+      background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+      color: white;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(220, 38, 38, 0.3);
+      transform: translateY(-100%);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      opacity: 0;
+    }
+
+    .error-panel.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .error-panel.shake {
+      animation: shake 0.6s ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0) translateY(0); }
+      25% { transform: translateX(-5px) translateY(0); }
+      75% { transform: translateX(5px) translateY(0); }
+    }
+
+    .error-item {
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border-radius: 4px;
+      padding: 4px 8px;
+      margin: 2px 0;
+    }
+
+    .error-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateX(4px);
+    }
+
+    /* --- SUBMISSION MODALS --- */
+    .submission-overlay {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      transition: all 0.3s ease;
+    }
+
+    .loading-modal {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+      transform: scale(0.9);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .loading-modal.show {
+      transform: scale(1);
+    }
+
+    .success-modal {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+      transform: scale(0.9) translateY(20px);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .success-modal.show {
+      transform: scale(1) translateY(0);
+    }
+
+    .celebration-icon {
+      animation: celebration 0.6s ease-out;
+    }
+
+    @keyframes celebration {
+      0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+      50% { transform: scale(1.2) rotate(-90deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    .pulse-loader {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.05); }
+    }
+
+    .copy-button {
+      transition: all 0.2s ease;
+      background: #6366f1;
+      color: white;
+    }
+
+    .copy-button:hover {
+      background: #4f46e5;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    .copy-button.copied {
+      background: #059669;
+      transform: scale(0.95);
+    }
+
+    .info-card {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .info-card:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    /* --- PROGRESS DOTS ANIMATION --- */
+    .progress-dots {
+      display: inline-flex;
+      gap: 4px;
+    }
+
+    .progress-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #6366f1;
+      animation: progressDots 1.4s ease-in-out infinite;
+    }
+
+    .progress-dot:nth-child(1) { animation-delay: 0s; }
+    .progress-dot:nth-child(2) { animation-delay: 0.2s; }
+    .progress-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes progressDots {
+      0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+      40% { transform: scale(1.2); opacity: 1; }
+    }
+
+    /* --- MODE TOGGLE BUTTON STYLING --- */
+    .mode-toggle-btn {
+      color: #6b7280; /* gray-500 */
+      background-color: transparent;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .mode-toggle-btn:hover {
+      color: #374151; /* gray-700 */
+      background-color: #f3f4f6; /* gray-100 */
+    }
+
+    .mode-toggle-btn.active {
+      background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important; /* purple gradient */
+      color: white !important;
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3) !important;
+      transform: translateY(-1px);
+      font-weight: 600;
+    }
+
+    .mode-toggle-btn.active:hover {
+      background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important; /* darker purple on hover */
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4) !important;
+    }
+
+    /* --- SAVE DRAFT SYSTEM STYLES --- */
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fade-out {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(10px); }
+    }
+
+    .animate-fade-in {
+      animation: fade-in 0.3s ease-out;
+    }
+
+    .animate-fade-out {
+      animation: fade-out 0.3s ease-out;
+    }
+
+    .toast-notification {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      background-color: #1f2937;
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      font-size: 0.875rem;
+      z-index: 9999;
+    }
+
+    /* --- STICKY HEADER STYLES --- */
+    .sticky-header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      padding: 0.75rem 1rem 0.5rem 1rem;
+    }
+
+    .compact-controls-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      padding: 0.5rem 0;
+    }
+
+    .controls-separator {
+      height: 24px;
+      width: 1px;
+      background-color: #d1d5db;
+    }
+
+    .button-group-compact {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .compact-controls-row {
+        gap: 0.5rem;
+      }
+      
+      .controls-separator {
+        display: none;
+      }
+    }
+
+  </style>
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+</head>
+<body class="bg-white text-gray-800">
+
+  <div id="script-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col">
+      <div class="flex justify-between items-center p-4 border-b flex-shrink-0">
+        <h3 class="text-lg font-bold text-gray-800">Process Call Script</h3>
+        <button id="close-modal-btn" class="text-gray-500 hover:text-gray-800 text-3xl leading-none">&times;</button>
+      </div>
+      <div class="p-4 space-y-4 flex-grow overflow-y-auto min-h-0">
+        <div>
+          <div class="flex justify-between items-center mb-1">
+              <label for="call-script-input" class="text-xs font-bold text-gray-700">Paste Call Script Here</label>
+              <button id="analyze-script-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-10px py-1 px-3 rounded-md transition duration-200">Analyze Script</button>
+          </div>
+          <textarea id="call-script-input" rows="5" class="w-full p-2 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500"></textarea>
+        </div>
+        <div class="relative">
+            <h4 class="text-xs font-bold text-gray-700 mb-1">Analysis Results</h4>
+            <div class="relative">
+                <div id="analysis-results" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-md overflow-auto h-80 resize-y">
+                    <p id="analysis-placeholder" class="text-gray-400">Results will be shown here after analysis.</p>
+                </div>
+                <div id="resize-handle" class="absolute bottom-0 right-0 w-6 h-6 opacity-50 hover:opacity-100 transition-opacity flex items-end justify-end p-1" style="cursor: ns-resize;">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 pointer-events-none" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M22 22H20V20H22V22ZM22 18H20V16H22V18ZM18 22H16V20H18V22ZM18 18H16V16H18V18ZM14 22H12V20H14V22ZM22 14H20V12H22V14Z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+      </div>
+      <div class="p-4 border-t flex justify-end space-x-2 flex-shrink-0">
+        <button id="cancel-modal-btn" type="button" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold text-xs py-2 px-4 rounded-md transition">Cancel</button>
+        <button id="apply-suggestions-btn" type="button" class="bg-green-600 hover:bg-green-700 text-white font-semibold text-xs py-2 px-4 rounded-md transition hidden">Apply Suggestions & Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container mx-auto p-4 md:p-6 max-w-7xl">
+    
+    <!-- Sticky Header -->
+    <div class="sticky-header">
+      <!-- Logo and Title Row -->
+      <header class="flex justify-between items-center mb-3">
+        <div>
+          <h1 id="form-title" class="text-2xl font-bold text-gray-800">New Hire Evaluation Form</h1>
+          <p class="text-xs text-gray-500">Quality Analyst Team</p>
+        </div>
+        <div class="flex items-center space-x-4">
+            <img src="https://i.imgur.com/fVSwGYv.png" alt="Logo" class="h-10">
+        </div>
+      </header>
+
+      <!-- Ultra-Compact Controls Row -->
+      <div class="compact-controls-row">
+        <!-- Mode Toggle (Left) -->
+        <div class="bg-gray-100 p-1 rounded-lg inline-flex">
+          <button id="create-mode-btn" class="mode-toggle-btn active px-4 py-1.5 rounded-md text-xs font-semibold transition-all duration-200">
+            Create
+          </button>
+          <button id="edit-mode-btn" class="mode-toggle-btn px-4 py-1.5 rounded-md text-xs font-semibold transition-all duration-200">
+            Edit
+          </button>
+        </div>
+
+        <!-- Spacer to push buttons to the right -->
+        <div class="flex-1"></div>
+
+        <!-- Action Buttons (Right) -->
+        <div class="button-group-compact" id="action-buttons-group">
+          <!-- Buttons will be added here dynamically -->
+        </div>
+
+        <div class="controls-separator"></div>
+
+        <!-- Form Progress Indicator (Right) -->
+        <div id="form-progress-container" class="flex items-center space-x-2 text-xs text-gray-700 hidden">
+          <span class="font-medium whitespace-nowrap">Progress:</span>
+          <div class="bg-gray-200 rounded-full h-1.5 w-32">
+            <div id="progress-bar" class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+          <span id="progress-percentage" class="font-semibold text-indigo-600 whitespace-nowrap">0%</span>
+          <span id="progress-count" class="text-gray-600 whitespace-nowrap text-10px">(0/40)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Search Section (hidden by default) -->
+    <div id="edit-search-section" class="hidden mb-6">
+      <div class="bg-amber-50 border border-amber-200 rounded-lg p-6">
+        <h3 class="text-lg font-bold text-amber-800 mb-4 flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+          </svg>
+          Find Evaluation to Edit
+        </h3>
+        
+        <!-- Search by Record ID -->
+        <div class="search-option mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Search by Record ID</label>
+          <div class="flex space-x-2">
+            <input type="text" id="search-record-id" placeholder="Enter Record ID (e.g., QA-09302024-ABC123XY)" 
+                   class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+            <button id="search-by-record-btn" class="bg-amber-600 hover:bg-amber-700 text-white font-semibold px-4 py-2 rounded-md text-sm transition duration-200">
+              Search
+            </button>
+          </div>
+        </div>
+        
+        <!-- OR Divider -->
+        <div class="flex items-center my-4">
+          <div class="flex-1 border-t border-gray-300"></div>
+          <span class="px-3 text-sm text-gray-500 bg-amber-50">OR</span>
+          <div class="flex-1 border-t border-gray-300"></div>
+        </div>
+        
+        <!-- Search by SAP ID + Date -->
+        <div class="search-option mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Search by SAP ID + Date</label>
+          <div class="flex space-x-2">
+            <input type="text" id="search-sap-id" placeholder="SAP ID" 
+                   class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+            <input type="date" id="search-date" 
+                   class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+            <button id="search-by-sap-date-btn" class="bg-amber-600 hover:bg-amber-700 text-white font-semibold px-4 py-2 rounded-md text-sm transition duration-200">
+              Search
+            </button>
+          </div>
+        </div>
+        
+        <!-- Search Results -->
+        <div id="search-results" class="hidden mt-4">
+          <h4 class="text-sm font-medium text-gray-700 mb-2">Search Results:</h4>
+          <div id="search-results-list" class="space-y-2">
+            <!-- Results will be populated here -->
+          </div>
+        </div>
+        
+        <!-- Search Loading -->
+        <div id="search-loading" class="hidden mt-4 text-center">
+          <div class="inline-flex items-center">
+            <div class="loader !w-4 !h-4 !border-2 mr-2"></div>
+            <span class="text-sm text-gray-600">Searching...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Mode Banner (hidden by default) -->
+    <div id="edit-mode-banner" class="hidden mb-6">
+      <div class="bg-amber-100 border border-amber-300 rounded-lg p-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <svg class="w-5 h-5 text-amber-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+            </svg>
+            <span class="font-semibold text-amber-800">EDITING EVALUATION</span>
+            <span id="editing-record-id" class="ml-2 font-mono text-sm text-amber-700"></span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span id="last-modified-info" class="text-xs text-amber-600"></span>
+            <button id="cancel-edit-btn" class="text-amber-600 hover:text-amber-800 text-sm font-medium">
+              Cancel Edit
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="loader" class="flex flex-col items-center justify-center p-12">
+      <div class="loader"></div>
+      <p class="mt-3 text-xs text-gray-600">Loading Form...</p>
+    </div>
+
+    <form id="qa-form" class="hidden">
+
+      <!-- Error Panel -->
+      <div id="error-panel" class="error-panel p-4 mb-6 hidden">
+        <div class="flex items-start">
+          <svg class="w-6 h-6 mr-3 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
+          <div class="flex-1">
+            <h3 class="font-semibold text-lg mb-2">Please Complete Required Fields</h3>
+            <div id="error-list" class="space-y-1"></div>
+            <div class="mt-3 text-sm opacity-90">
+              <span id="error-progress"></span>
+            </div>
+          </div>
+          <button type="button" id="close-error-panel" class="ml-4 text-white hover:text-gray-200">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="form-container" class="space-y-6 mt-2">
+        </div>
+
+      <div class="pt-4 mt-6 border-t border-gray-200 flex items-center justify-between">
+        <!-- Email disclaimer on the left -->
+        <div class="flex items-center space-x-2 text-xs text-gray-600">
+          <svg class="w-4 h-4 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+          </svg>
+          <span>Submission will be recorded under: <strong id="user-email">Loading...</strong></span>
+        </div>
+        
+        <!-- Submit button and loader on the right -->
+        <div class="flex items-center space-x-3">
+          <button type="submit" id="submit-button" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-2 px-5 rounded-md transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            Submit
+          </button>
+          <div id="submit-loader" class="loader !w-6 !h-6 hidden"></div>
+        </div>
+      </div>
+    </form>
+    
+    <div id="status-message" class="mt-4"></div>
+
+  </div>
+
+  <!-- Submission Loading Modal -->
+  <div id="submission-overlay" class="submission-overlay fixed inset-0 z-50 flex items-center justify-center hidden">
+    <div id="loading-modal" class="loading-modal p-8 text-center max-w-md mx-4">
+      <div class="pulse-loader mb-4">
+        <svg class="w-16 h-16 mx-auto text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" />
+        </svg>
+      </div>
+      <h3 class="text-xl font-semibold text-gray-800 mb-2">Submitting Evaluation</h3>
+      <p class="text-gray-600 mb-4">Please wait while we process your submission</p>
+      <div class="progress-dots">
+        <div class="progress-dot"></div>
+        <div class="progress-dot"></div>
+        <div class="progress-dot"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Confirmation Modal -->
+  <div id="success-overlay" class="submission-overlay fixed inset-0 z-50 flex items-center justify-center hidden">
+    <div id="success-modal" class="success-modal max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+      <div class="p-6">
+        <!-- Header -->
+        <div class="text-center mb-6">
+          <div class="celebration-icon w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+            <svg class="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <h2 class="text-2xl font-bold text-gray-800 mb-2">Evaluation Submitted Successfully!</h2>
+          <p class="text-gray-600">Your quality assessment has been recorded and saved.</p>
+        </div>
+
+        <!-- Team Member Details -->
+        <div class="info-card p-4 mb-4">
+          <h3 class="font-semibold text-gray-800 mb-3 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+            </svg>
+            Team Member Details
+          </h3>
+          <div id="team-details-display" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+            <!-- Will be populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Call Details -->
+        <div class="info-card p-4 mb-4">
+          <h3 class="font-semibold text-gray-800 mb-3 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" clip-rule="evenodd" />
+            </svg>
+            Call Details
+          </h3>
+          <div id="call-details-display" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+            <!-- Will be populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Record ID -->
+        <div class="info-card p-4 mb-6">
+          <h3 class="font-semibold text-gray-800 mb-3 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
+            </svg>
+            Record ID
+          </h3>
+          <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+            <code id="record-id-display" class="text-lg font-mono text-gray-800 flex-1">
+              <!-- Will be populated dynamically -->
+            </code>
+            <button id="copy-record-id" class="copy-button px-4 py-2 rounded-lg text-sm font-semibold ml-3 flex items-center">
+              <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+              </svg>
+              Copy
+            </button>
+          </div>
+        </div>
+
+        <!-- Close Button -->
+        <div class="text-center">
+          <button id="close-success-modal" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold px-8 py-3 rounded-lg transition duration-200 ease-in-out">
+            Close & Clear Form
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- CONFIGURATION & CONSTANTS ---
+    const ICONS = {
+        PLUS: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>`,
+        MINUS: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" /></svg>`
+    };
+
+    // --- EDIT MODE VARIABLES ---
+    let currentMode = 'create'; // 'create' or 'edit'
+    let currentEditingRecordId = null;
+    let originalFormData = null;
+
+    // --- SAVE DRAFT SYSTEM VARIABLES ---
+    const DRAFT_STORAGE_KEY = 'nh_evaluation_draft';
+    let autoSaveTimeout = null;
+    let isLoadingFromDraft = false;
+
+    // Get current form state
+    function getFormState() {
+        const state = {};
+        const form = document.getElementById('qa-form');
+        if (!form) return state;
+        
+        const elements = form.querySelectorAll('input, select, textarea');
+        elements.forEach(element => {
+            if (element.type === 'radio') {
+                if (element.checked) {
+                    state[element.name] = element.value;
+                }
+            } else if (element.type === 'checkbox') {
+                state[element.name] = element.checked;
+            } else {
+                state[element.name] = element.value;
+            }
+        });
+        
+        return state;
+    }
+
+    // Set form state
+    function setFormState(state) {
+        console.log('=== SET FORM STATE DEBUG ===');
+        console.log('State to apply:', state);
+        console.log('State keys:', Object.keys(state));
+        
+        let fieldsSet = 0;
+        let fieldsNotFound = [];
+        
+        Object.keys(state).forEach(fieldName => {
+            const value = state[fieldName];
+            
+            console.log(`Processing field: "${fieldName}" with value: "${value}"`);
+            
+            // Try radio buttons first
+            const radio = document.querySelector(`input[name="${fieldName}"][value="${value}"]`);
+            if (radio) {
+                radio.checked = true;
+                console.log(`✅ Set radio "${fieldName}" to "${value}"`);
+                fieldsSet++;
+                return;
+            }
+            
+            // Try checkbox
+            const checkbox = document.querySelector(`input[type="checkbox"][name="${fieldName}"]`);
+            if (checkbox) {
+                checkbox.checked = value;
+                console.log(`✅ Set checkbox "${fieldName}" to ${value}`);
+                fieldsSet++;
+                return;
+            }
+            
+            // Try regular input/select/textarea
+            const element = document.querySelector(`input[name="${fieldName}"], select[name="${fieldName}"], textarea[name="${fieldName}"]`);
+            if (element) {
+                element.value = value;
+                console.log(`✅ Set field "${fieldName}" to "${value}"`);
+                fieldsSet++;
+                
+                // Trigger change event for cascading dropdowns
+                if (fieldName === "Call Driver Level 1") {
+                    element.dispatchEvent(new Event('change'));
+                    console.log('Triggered change event for Call Driver Level 1');
+                    
+                    // Wait for cascading, then set Level 2
+                    setTimeout(() => {
+                        const level2Value = state["Call Driver Level 2"];
+                        if (level2Value) {
+                            const level2 = document.querySelector(`select[name="Call Driver Level 2"]`);
+                            if (level2) {
+                                level2.value = level2Value;
+                                console.log(`✅ Set Call Driver Level 2 to "${level2Value}"`);
+                            }
+                        }
+                    }, 100);
+                }
+                return;
+            }
+            
+            console.log(`❌ Field not found: "${fieldName}"`);
+            fieldsNotFound.push(fieldName);
+        });
+        
+        console.log(`=== SET FORM STATE SUMMARY ===`);
+        console.log(`Fields set: ${fieldsSet}`);
+        console.log(`Fields not found: ${fieldsNotFound.length}`);
+        if (fieldsNotFound.length > 0) {
+            console.log('Not found:', fieldsNotFound);
+        }
+        console.log('=== SET FORM STATE DEBUG END ===');
+    }
+
+    const SUBSECTION_COLORS = { "Core": "text-green-800", "Critical": "text-red-800", "Basic": "text-blue-800", "Intermediate": "text-yellow-800", "Advanced": "text-purple-800", "Sales Skills": "text-teal-800" };
+    const SUBSECTION_BG_COLORS = { "Core": "bg-green-100", "Critical": "bg-red-100", "Basic": "bg-blue-100", "Intermediate": "bg-yellow-100", "Advanced": "bg-purple-100", "Sales Skills": "bg-teal-100" };
+    const SUBSECTION_DESCRIPTIONS = {
+        "Core": "Baseline skills that align to our caring culture.",
+        "Critical": "Skills that focus on resolving customer's issues and inquiries.",
+        "Basic": "Skills that require less time to coach and develop and add value to a customer's experience.",
+        "Intermediate": "Skills that require more time to develop and/or add more value to a customer's experience.",
+        "Advanced": "Skills that are complex to develop and/or add even more value to our customer's experience.",
+        "Sales Skills": "Skills related to identifying and acting on sales opportunities."
+    };
+    const fieldNameToPromptKey = {
+        'Call Summary': 'callSummary',
+        'Highlights': 'highlights',
+        'Lowlights/Recommendation': 'lowlights'
+    };
+    let analysisResultData = null;
+    let rubricDetails = {}; // To store the full rubric details
+
+    // --- MOCK FOR LOCAL PREVIEW ---
+    if (typeof google === 'undefined') {
+      console.log("Running in preview mode: Mocking google.script.run");
+      window.google = {
+        script: {
+          run: {
+            withSuccessHandler: function(callback) { this.successCallback = callback; return this; },
+            withFailureHandler: function(callback) { this.failureCallback = callback; return this; },
+            getTeamMemberDetails: function(sapId) {
+                if (sapId === '12345') {
+                    if (this.successCallback) this.successCallback({ "Sap ID": "12345", "Team Member": "John Doe", "Team Leader": "Jane Smith", "Operations Manager": "Peter Jones", "Line of Business": "Customer Service" });
+                } else {
+                    if (this.successCallback) this.successCallback(null);
+                }
+            },
+            analyzeCallScript: function(scriptText) {
+                // Mock implementation
+            },
+            rewriteText: function(text, type) {
+                // Mock implementation
+            },
+            getFormStructure: function() {
+                // Mock implementation
+            },
+            getRubricDetails: function() {
+                if(this.successCallback) this.successCallback({
+                  "Warm and Energetic Greeting that Connects with the Customer": {
+                    "description": "Opening the call with energy to build rapport and start the call strong.",
+                    "observe": ["The team member's tone is clearly not boring or too slow paced.", "Welcomed the customer."],
+                    "ratings": { "DW": "All 'What should be observed' has been 100% executed.", "Prt": "Missed 50% of 'what should be observed'.", "DD": "Missed 75% of 'what should be observed'." }
+                  }
+                });
+            },
+            saveFormData: function(formData) {
+              console.log("Mock save:", formData);
+              if (this.successCallback) this.successCallback({ success: true, message: 'Mock submission successful!' });
+            },
+            getCurrentUserEmail: function() {
+              console.log("Mock getCurrentUserEmail called");
+              if (this.successCallback) this.successCallback('user@telus.com');
+            },
+            isAdminUser: function() {
+              console.log("Mock isAdminUser called");
+              if (this.successCallback) this.successCallback(false); // Default to non-admin for testing
+            }
+          }
+        }
+      };
+    }
+
+    // --- 1. INITIALIZATION ---
+    document.addEventListener('DOMContentLoaded', () => {
+        loadForm();
+        loadRubricDetails();
+        loadUserEmail();
+        setupEditModeToggle();
+        checkAdminStatus();
+        
+        // Initialize save draft system
+        setTimeout(() => {
+            initializeSaveDraftSystem();
+            checkForSavedDraft();
+        }, 1000);
+    });
+    document.getElementById('qa-form').addEventListener('submit', handleFormSubmit);
+    
+    // Initialize save draft system
+    function initializeSaveDraftSystem() {
+        // Add change listeners to all form fields
+        const form = document.getElementById('qa-form');
+        if (form) {
+            const elements = form.querySelectorAll('input, select, textarea');
+            elements.forEach(element => {
+                const eventType = (element.tagName === 'TEXTAREA' || element.type === 'text' || element.type === 'date') ? 'input' : 'change';
+                element.addEventListener(eventType, () => {
+                    debouncedAutoSave();
+                    updateFormProgress();
+                });
+            });
+            
+            // Show progress bar immediately
+            const progressContainer = document.getElementById('form-progress-container');
+            if (progressContainer) {
+                progressContainer.classList.remove('hidden');
+                updateFormProgress();
+            }
+        }
+    }
+
+    // --- EDIT MODE FUNCTIONALITY ---
+    function setupEditModeToggle() {
+        // Mode toggle buttons
+        const createModeBtn = document.getElementById('create-mode-btn');
+        const editModeBtn = document.getElementById('edit-mode-btn');
+        
+        // Search functionality
+        const searchByRecordBtn = document.getElementById('search-by-record-btn');
+        const searchBySapDateBtn = document.getElementById('search-by-sap-date-btn');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        
+        // Event listeners
+        createModeBtn.addEventListener('click', () => switchToCreateMode());
+        editModeBtn.addEventListener('click', () => switchToEditMode());
+        searchByRecordBtn.addEventListener('click', () => searchByRecordId());
+        searchBySapDateBtn.addEventListener('click', () => searchBySapIdAndDate());
+        cancelEditBtn.addEventListener('click', () => cancelEdit());
+        
+        // Enter key support for search inputs
+        document.getElementById('search-record-id').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchByRecordId();
+            }
+        });
+        
+        document.getElementById('search-sap-id').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchBySapIdAndDate();
+            }
+        });
+        
+        document.getElementById('search-date').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchBySapIdAndDate();
+            }
+        });
+    }
+    
+    function switchToCreateMode() {
+        currentMode = 'create';
+        currentEditingRecordId = null;
+        originalFormData = null;
+        
+        // Update UI
+        updateModeToggleButtons();
+        hideEditSearchSection();
+        hideEditModeBanner();
+        updateFormTitle();
+        updateSubmitButton();
+        
+        // Clear form
+        clearFormCompletely();
+        
+        showMessage('Switched to create mode. Form cleared.', true);
+    }
+    
+    function switchToEditMode() {
+        currentMode = 'edit';
+        
+        // Update UI
+        updateModeToggleButtons();
+        showEditSearchSection();
+        hideEditModeBanner();
+        updateFormTitle();
+        
+        // Clear form and search results
+        clearFormCompletely();
+        clearSearchResults();
+        
+        showMessage('Switched to edit mode. Search for an evaluation to edit.', true);
+    }
+    
+    function updateModeToggleButtons() {
+        const createBtn = document.getElementById('create-mode-btn');
+        const editBtn = document.getElementById('edit-mode-btn');
+        
+        if (currentMode === 'create') {
+            createBtn.classList.add('active', 'bg-white', 'text-gray-900', 'shadow-sm');
+            createBtn.classList.remove('text-gray-600', 'hover:text-gray-900');
+            editBtn.classList.remove('active', 'bg-white', 'text-gray-900', 'shadow-sm');
+            editBtn.classList.add('text-gray-600', 'hover:text-gray-900');
+        } else {
+            editBtn.classList.add('active', 'bg-white', 'text-gray-900', 'shadow-sm');
+            editBtn.classList.remove('text-gray-600', 'hover:text-gray-900');
+            createBtn.classList.remove('active', 'bg-white', 'text-gray-900', 'shadow-sm');
+            createBtn.classList.add('text-gray-600', 'hover:text-gray-900');
+        }
+    }
+    
+    function showEditSearchSection() {
+        document.getElementById('edit-search-section').classList.remove('hidden');
+    }
+    
+    function hideEditSearchSection() {
+        document.getElementById('edit-search-section').classList.add('hidden');
+    }
+    
+    function showEditModeBanner() {
+        document.getElementById('edit-mode-banner').classList.remove('hidden');
+    }
+    
+    function hideEditModeBanner() {
+        document.getElementById('edit-mode-banner').classList.add('hidden');
+    }
+    
+    function updateFormTitle() {
+        const titleElement = document.getElementById('form-title');
+        titleElement.textContent = 'New Hire Evaluation Form';
+    }
+    
+    function updateSubmitButton() {
+        const submitButton = document.getElementById('submit-button');
+        console.log('=== UPDATE SUBMIT BUTTON DEBUG ===');
+        console.log('Current mode:', currentMode);
+        console.log('Current editing record ID:', currentEditingRecordId);
+        console.log('Button element:', submitButton);
+        
+        if (!submitButton) {
+            console.error('Submit button not found!');
+            return;
+        }
+        
+        // Force button to be visible first
+        submitButton.style.display = 'inline-flex';
+        submitButton.style.visibility = 'visible';
+        submitButton.style.opacity = '1';
+        submitButton.style.position = 'static';
+        submitButton.style.zIndex = 'auto';
+        submitButton.classList.remove('hidden');
+        
+        if (currentMode === 'edit' && currentEditingRecordId) {
+            console.log('Setting button to UPDATE mode');
+            submitButton.textContent = 'Update Evaluation';
+            submitButton.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+            submitButton.classList.add('bg-amber-600', 'hover:bg-amber-700');
+            
+            // Additional visibility enforcement for edit mode
+            submitButton.style.backgroundColor = '#d97706'; // amber-600
+            submitButton.style.color = 'white';
+            submitButton.style.border = 'none';
+            submitButton.style.minWidth = '140px';
+            submitButton.style.height = 'auto';
+            
+        } else {
+            console.log('Setting button to SUBMIT mode');
+            submitButton.textContent = 'Submit';
+            submitButton.classList.remove('bg-amber-600', 'hover:bg-amber-700');
+            submitButton.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+            
+            // Reset to default styling
+            submitButton.style.backgroundColor = '';
+            submitButton.style.color = '';
+            submitButton.style.border = '';
+            submitButton.style.minWidth = '';
+            submitButton.style.height = '';
+        }
+        
+        // Force a reflow to ensure changes are applied
+        submitButton.offsetHeight;
+        
+        console.log('Button text after update:', submitButton.textContent);
+        console.log('Button classes after update:', submitButton.className);
+        console.log('Button computed styles:', window.getComputedStyle(submitButton));
+        console.log('Button visibility:', submitButton.style.visibility);
+        console.log('Button display:', submitButton.style.display);
+        console.log('Button opacity:', submitButton.style.opacity);
+        console.log('=== UPDATE SUBMIT BUTTON DEBUG END ===');
+    }
+    
+    function searchByRecordId() {
+        const recordId = document.getElementById('search-record-id').value.trim();
+        
+        if (!recordId) {
+            showMessage('Please enter a Record ID to search.', false);
+            return;
+        }
+        
+        showSearchLoading();
+        
+        google.script.run
+            .withSuccessHandler(handleSearchSuccess)
+            .withFailureHandler(handleSearchError)
+            .getEvaluationByRecordId(recordId);
+    }
+    
+    function searchBySapIdAndDate() {
+        const sapId = document.getElementById('search-sap-id').value.trim();
+        const date = document.getElementById('search-date').value;
+        
+        if (!sapId || !date) {
+            showMessage('Please enter both SAP ID and Date to search.', false);
+            return;
+        }
+        
+        showSearchLoading();
+        
+        google.script.run
+            .withSuccessHandler(handleMultipleSearchSuccess)
+            .withFailureHandler(handleSearchError)
+            .searchEvaluationsBySapIdAndDate(sapId, date);
+    }
+    
+    function showSearchLoading() {
+        document.getElementById('search-loading').classList.remove('hidden');
+        document.getElementById('search-results').classList.add('hidden');
+    }
+    
+    function hideSearchLoading() {
+        document.getElementById('search-loading').classList.add('hidden');
+    }
+    
+    function handleSearchSuccess(evaluationData) {
+        hideSearchLoading();
+        
+        console.log('=== FRONTEND SEARCH SUCCESS DEBUG START ===');
+        console.log('Received evaluation data in handleSearchSuccess:', evaluationData);
+        console.log('Data type:', typeof evaluationData);
+        console.log('Data keys:', evaluationData ? Object.keys(evaluationData) : 'null');
+        
+        if (evaluationData) {
+            console.log('Calling loadEvaluationForEditing...');
+            loadEvaluationForEditing(evaluationData);
+        } else {
+            console.log('No evaluation data received');
+            showMessage('No evaluation found with that Record ID.', false);
+        }
+        
+        console.log('=== FRONTEND SEARCH SUCCESS DEBUG END ===');
+    }
+    
+    function handleMultipleSearchSuccess(searchResults) {
+        hideSearchLoading();
+        
+        if (searchResults && searchResults.length > 0) {
+            displaySearchResults(searchResults);
+        } else {
+            showMessage('No evaluations found for that SAP ID and date.', false);
+        }
+    }
+    
+    function handleSearchError(error) {
+        hideSearchLoading();
+        showMessage(`Search failed: ${error.message}`, false);
+    }
+    
+    function displaySearchResults(results) {
+        const resultsContainer = document.getElementById('search-results');
+        const resultsList = document.getElementById('search-results-list');
+        
+        resultsList.innerHTML = '';
+        
+        results.forEach(result => {
+            const resultItem = document.createElement('div');
+            resultItem.className = 'bg-white border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition duration-200';
+            
+            resultItem.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="font-semibold text-gray-800">${result.teamMember}</div>
+                        <div class="text-sm text-gray-600">Record ID: ${result.recordId}</div>
+                        <div class="text-xs text-gray-500">Date: ${result.interactionDate} • ${result.timestamp}</div>
+                    </div>
+                    <button class="bg-amber-600 hover:bg-amber-700 text-white font-semibold px-3 py-1 rounded text-sm transition duration-200">
+                        Load
+                    </button>
+                </div>
+            `;
+            
+            resultItem.addEventListener('click', () => {
+                // Load the full evaluation data
+                google.script.run
+                    .withSuccessHandler(loadEvaluationForEditing)
+                    .withFailureHandler(handleSearchError)
+                    .getEvaluationByRecordId(result.recordId);
+            });
+            
+            resultsList.appendChild(resultItem);
+        });
+        
+        resultsContainer.classList.remove('hidden');
+    }
+    
+    function loadEvaluationForEditing(evaluationData) {
+        try {
+            console.log('=== LOAD EVALUATION DEBUG START ===');
+            console.log('Received evaluation data:', evaluationData);
+            console.log('RecordID:', evaluationData.RecordID);
+            
+            // Store original data for comparison
+            originalFormData = { ...evaluationData };
+            currentEditingRecordId = evaluationData.RecordID;
+            
+            console.log('Calling convertEvaluationToFormData...');
+            
+            // Convert spreadsheet data to form data format
+            google.script.run
+                .withSuccessHandler((formData) => {
+                    console.log('convertEvaluationToFormData SUCCESS');
+                    console.log('Converted form data:', formData);
+                    populateFormWithEvaluationData(formData);
+                })
+                .withFailureHandler((error) => {
+                    console.error('convertEvaluationToFormData FAILED:', error);
+                    handleFormPopulationError(error);
+                })
+                .convertEvaluationToFormData(evaluationData);
+            
+            console.log('=== LOAD EVALUATION DEBUG END ===');
+            
+        } catch (error) {
+            console.error('loadEvaluationForEditing error:', error);
+            showMessage(`Error loading evaluation: ${error.message}`, false);
+        }
+    }
+    
+    function populateFormWithEvaluationData(formData) {
+        try {
+            console.log('=== FORM POPULATION DEBUG START ===');
+            console.log('Received form data:', formData);
+            console.log('Form data keys:', Object.keys(formData));
+            console.log('Form data entries count:', Object.keys(formData).length);
+            
+            // Clear form first
+            clearFormCompletely();
+            
+            let fieldsPopulated = 0;
+            let fieldsNotFound = [];
+            let fieldsWithErrors = [];
+            
+            // Populate all form fields
+            Object.entries(formData).forEach(([fieldName, value]) => {
+                try {
+                    console.log(`Processing field: "${fieldName}" with value: "${value}"`);
+                    
+                    // Try to find the field in the form
+                    const field = document.querySelector(`input[name="${fieldName}"], select[name="${fieldName}"], textarea[name="${fieldName}"]`);
+                    
+                    if (!field) {
+                        console.log(`Field not found: "${fieldName}"`);
+                        fieldsNotFound.push(fieldName);
+                        return;
+                    }
+                    
+                    console.log(`Found field: "${fieldName}", type: ${field.type || field.tagName}`);
+                    
+                    if (field.type === 'radio') {
+                        // For radio buttons, find the specific radio with this value
+                        const radio = document.querySelector(`input[name="${fieldName}"][value="${value}"]`);
+                        if (radio) {
+                            radio.checked = true;
+                            console.log(`Set radio "${fieldName}" to "${value}"`);
+                            fieldsPopulated++;
+                        } else {
+                            console.log(`Radio option not found for "${fieldName}" with value "${value}"`);
+                            fieldsNotFound.push(`${fieldName}[${value}]`);
+                        }
+                    } else if (field.type === 'checkbox') {
+                        // For checkboxes, check if value is "on"
+                        const shouldCheck = (value === "on" || value === true || value === 1 || value === "1");
+                        field.checked = shouldCheck;
+                        console.log(`Set checkbox "${fieldName}" to ${shouldCheck}`);
+                        fieldsPopulated++;
+                    } else if (field.tagName === 'SELECT') {
+                        // For dropdowns, set the selected value
+                        field.value = value;
+                        console.log(`Set dropdown "${fieldName}" to "${value}"`);
+                        fieldsPopulated++;
+                        
+                        // If this is Call Driver Level 1, trigger cascading
+                        if (fieldName === "Call Driver Level 1") {
+                            field.dispatchEvent(new Event('change'));
+                            console.log('Triggered cascading for Call Driver Level 1');
+                            
+                            // Wait for cascading to complete, then set Level 2
+                            setTimeout(() => {
+                                const level2Value = formData["Call Driver Level 2"];
+                                if (level2Value) {
+                                    const level2Field = document.querySelector('select[name="Call Driver Level 2"]');
+                                    if (level2Field) {
+                                        level2Field.value = level2Value;
+                                        console.log(`Set Call Driver Level 2 to "${level2Value}"`);
+                                    }
+                                }
+                            }, 100);
+                        }
+                    } else {
+                        // For text inputs and textareas
+                        field.value = value || '';
+                        console.log(`Set text field "${fieldName}" to "${value}"`);
+                        fieldsPopulated++;
+                    }
+                } catch (fieldError) {
+                    console.error(`Error processing field "${fieldName}":`, fieldError);
+                    fieldsWithErrors.push(`${fieldName}: ${fieldError.message}`);
+                }
+            });
+            
+            console.log(`=== FORM POPULATION SUMMARY ===`);
+            console.log(`Fields populated: ${fieldsPopulated}`);
+            console.log(`Fields not found: ${fieldsNotFound.length}`);
+            console.log(`Fields with errors: ${fieldsWithErrors.length}`);
+            
+            if (fieldsNotFound.length > 0) {
+                console.log('Fields not found:', fieldsNotFound);
+            }
+            
+            if (fieldsWithErrors.length > 0) {
+                console.log('Fields with errors:', fieldsWithErrors);
+            }
+            
+            // Update UI for edit mode - IMPORTANT: Do this AFTER setting currentEditingRecordId
+            hideEditSearchSection();
+            showEditModeBanner();
+            updateFormTitle();
+            updateSubmitButton(); // This should now work correctly
+            
+            // Update edit banner with record info
+            document.getElementById('editing-record-id').textContent = currentEditingRecordId;
+            
+            // Show last modified info if available
+            const lastModifiedInfo = document.getElementById('last-modified-info');
+            if (originalFormData.Timestamp) {
+                lastModifiedInfo.textContent = `Last modified: ${new Date(originalFormData.Timestamp).toLocaleString()}`;
+            }
+            
+            console.log('=== FORM POPULATION DEBUG END ===');
+            console.log(`Current mode: ${currentMode}, Current editing record: ${currentEditingRecordId}`);
+            
+            if (fieldsPopulated > 0) {
+                showMessage(`Evaluation loaded for editing: ${currentEditingRecordId} (${fieldsPopulated} fields populated)`, true);
+            } else {
+                showMessage(`Warning: Evaluation loaded but no fields were populated. Check console for details.`, false);
+            }
+            
+        } catch (error) {
+            console.error('Form population error:', error);
+            showMessage(`Error populating form: ${error.message}`, false);
+        }
+    }
+    
+    function handleFormPopulationError(error) {
+        showMessage(`Error converting evaluation data: ${error.message}`, false);
+    }
+    
+    function cancelEdit() {
+        if (confirm('Are you sure you want to cancel editing? Any unsaved changes will be lost.')) {
+            switchToCreateMode();
+        }
+    }
+    
+    function clearSearchResults() {
+        document.getElementById('search-results').classList.add('hidden');
+        document.getElementById('search-results-list').innerHTML = '';
+        document.getElementById('search-record-id').value = '';
+        document.getElementById('search-sap-id').value = '';
+        document.getElementById('search-date').value = '';
+    }
+
+    function loadUserEmail() {
+        console.log("Starting email fetch...");
+        document.getElementById('user-email').textContent = 'Loading...';
+        
+        google.script.run
+            .withSuccessHandler(email => {
+                console.log("Email fetch successful:", email);
+                if (email && email.trim()) {
+                    document.getElementById('user-email').textContent = email;
+                } else {
+                    console.warn("Email is empty or null:", email);
+                    document.getElementById('user-email').textContent = 'user@company.com';
+                }
+            })
+            .withFailureHandler(error => {
+                console.error("Email fetch failed:", error);
+                document.getElementById('user-email').textContent = 'Error loading email';
+                // Show more detailed error to user
+                setTimeout(() => {
+                    document.getElementById('user-email').textContent = 'user@company.com';
+                }, 3000);
+            })
+            .getCurrentUserEmail();
+    }
+
+    function loadForm() {
+      google.script.run
+        .withSuccessHandler(buildForm)
+        .withFailureHandler(showError)
+        .getFormStructure();
+    }
+
+    function loadRubricDetails() {
+        google.script.run
+            .withSuccessHandler(data => {
+                rubricDetails = data;
+                // If form is already built, rebuild it to add new tooltips
+                if (document.getElementById('form-container').innerHTML.trim() !== '') {
+                  loadForm();
+                }
+            })
+            .withFailureHandler(error => {
+                console.error("Could not load rubric details:", error);
+            })
+            .getRubricDetails();
+    }
+
+
+    // --- 2. FORM BUILDING ---
+    function buildForm(sections) {
+      try {
+        if (sections.error) {
+            showError({ message: `${sections.error}\nDetails: ${sections.details}` });
+            return;
+        }
+
+        const formContainer = document.getElementById('form-container');
+        formContainer.innerHTML = '';
+        for (const section of sections) {
+            formContainer.appendChild(renderSection(section));
+        }
+        document.getElementById('loader').classList.add('hidden');
+        document.getElementById('qa-form').classList.remove('hidden');
+        
+        const sapIdInput = document.querySelector('input[name="Sap ID"]');
+        if(sapIdInput) {
+            sapIdInput.addEventListener('keydown', handleSapIdEnter);
+        }
+
+        setDefaultEstDate();
+        
+        // Initialize event listeners for progress tracking AFTER form is built
+        const form = document.getElementById('qa-form');
+        if (form) {
+            const elements = form.querySelectorAll('input, select, textarea');
+            elements.forEach(element => {
+                const eventType = (element.tagName === 'TEXTAREA' || element.type === 'text' || element.type === 'date') ? 'input' : 'change';
+                element.addEventListener(eventType, () => {
+                    debouncedAutoSave();
+                    updateFormProgress();
+                });
+            });
+        }
+        
+        // Show progress bar and update initial progress
+        const progressContainer = document.getElementById('form-progress-container');
+        if (progressContainer) {
+            progressContainer.classList.remove('hidden');
+            updateFormProgress();
+        }
+
+        // Load call driver mapping and setup cascading dropdown functionality
+        loadCallDriverMapping();
+
+        // Setup modal event listeners
+        document.getElementById('close-modal-btn').addEventListener('click', closeScriptModal);
+        document.getElementById('cancel-modal-btn').addEventListener('click', closeScriptModal);
+        document.getElementById('analyze-script-btn').addEventListener('click', handleAnalyzeScript);
+        document.getElementById('apply-suggestions-btn').addEventListener('click', applySuggestions);
+        
+        // Setup resize functionality
+        initializeResizeFunctionality();
+        
+      } catch (error) {
+        console.error("Error building form:", error);
+        showError({ message: `A critical error occurred while building the form. Error: ${error.message}` });
+      }
+    }
+
+    function renderSection(section) {
+        const sectionDiv = document.createElement('div');
+        const titleWrapper = document.createElement('div');
+        titleWrapper.className = 'flex justify-between items-center pb-2 mb-4 border-b-2 border-indigo-100';
+        
+        const contentContainer = document.createElement('div');
+        contentContainer.className = 'collapsible-content';
+        
+        const title = document.createElement('h2');
+        title.textContent = section.title;
+        title.className = 'text-lg font-bold text-indigo-600';
+        
+        // Note: Mandatory badge display removed per user request
+        // Mandatory sections are still validated, just without visual badge
+        
+        titleWrapper.appendChild(title);
+        
+        if (section.title === "Team Member Details") {
+            // Add buttons to the header action buttons group instead
+            const actionButtonsGroup = document.getElementById('action-buttons-group');
+            if (actionButtonsGroup && actionButtonsGroup.children.length === 0) {
+                // Process Script button
+                const processButton = document.createElement('button');
+                processButton.type = 'button';
+                processButton.textContent = 'Process Script';
+                processButton.className = 'bg-blue-100 hover:bg-blue-200 text-blue-800 font-semibold text-xs py-1.5 px-3 rounded-md transition';
+                processButton.addEventListener('click', openScriptModal);
+                actionButtonsGroup.appendChild(processButton);
+
+                // Clear Form button (icon only)
+                const clearButton = document.createElement('button');
+                clearButton.type = 'button';
+                clearButton.title = 'Clear Form';
+                clearButton.className = 'bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold text-xs p-1.5 rounded-md transition';
+                clearButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>`;
+                clearButton.addEventListener('click', (e) => {
+                    clearFormCompletely();
+                    showMessage('Form cleared.', true);
+                });
+                actionButtonsGroup.appendChild(clearButton);
+
+                // Save Draft button (icon only)
+                const saveDraftButton = document.createElement('button');
+                saveDraftButton.type = 'button';
+                saveDraftButton.id = 'saveDraftBtn';
+                saveDraftButton.title = 'Save Draft (Ctrl+S)';
+                saveDraftButton.className = 'bg-green-600 hover:bg-green-700 text-white font-semibold text-xs p-1.5 rounded-md transition';
+                saveDraftButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" /></svg>`;
+                saveDraftButton.addEventListener('click', handleSaveDraft);
+                actionButtonsGroup.appendChild(saveDraftButton);
+            }
+        }
+        if (section.collapsible) {
+            titleWrapper.classList.add('cursor-pointer');
+            const collapseButton = document.createElement('button');
+            collapseButton.type = 'button';
+            collapseButton.innerHTML = ICONS.MINUS;
+            collapseButton.className = 'text-indigo-600 hover:bg-indigo-100 p-1 rounded-full';
+            titleWrapper.appendChild(collapseButton);
+            titleWrapper.addEventListener('click', (e) => {
+                const isCollapsing = contentContainer.classList.toggle('collapsed');
+                collapseButton.innerHTML = isCollapsing ? ICONS.PLUS : ICONS.MINUS;
+            });
+        }
+        if (section.title === "Call Evaluation Details") {
+            const rewriteAllButton = document.createElement('button');
+            rewriteAllButton.type = 'button';
+            rewriteAllButton.id = 'rewrite-all-btn';
+            rewriteAllButton.className = 'bg-green-100 hover:bg-green-200 text-green-800 font-semibold text-xs py-2 px-3 rounded-md transition duration-200 ease-in-out flex items-center space-x-1.5';
+            rewriteAllButton.innerHTML = `<span>Rewrite All with FueliX</span><svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>`;
+            rewriteAllButton.addEventListener('click', handleRewriteAllClick);
+            titleWrapper.appendChild(rewriteAllButton);
+        }
+        sectionDiv.appendChild(titleWrapper);
+        if (section.title === "Call Evaluation Details") {
+            const grid = document.createElement('div');
+            grid.className = 'pt-4 grid grid-cols-1 md:grid-cols-2 gap-x-6';
+            const leftCol = document.createElement('div');
+            const rightCol = document.createElement('div');
+            rightCol.className = 'space-y-4';
+            
+            // Add Call Driver Level 1 to left column
+            const callDriverLevel1Field = section.fields.find(field => field.name === "Call Driver Level 1");
+            if (callDriverLevel1Field) {
+                const fieldEl = createFieldElement(callDriverLevel1Field, section.title);
+                leftCol.appendChild(fieldEl);
+            }
+            
+            // Add Call Driver Level 2 to right column (first item)
+            const callDriverLevel2Field = section.fields.find(field => field.name === "Call Driver Level 2");
+            if (callDriverLevel2Field) {
+                const fieldEl = createFieldElement(callDriverLevel2Field, section.title, { isCascading: callDriverLevel2Field.cascading });
+                rightCol.appendChild(fieldEl);
+            }
+            
+            // Add spacing div to left column to align Call Summary with Highlights
+            const spacingDiv = document.createElement('div');
+            spacingDiv.className = 'mb-4'; // Add margin bottom to match the spacing
+            leftCol.appendChild(spacingDiv);
+            
+            section.fields.forEach(field => {
+                if (field.name !== "Call Driver Level 1" && field.name !== "Call Driver Level 2") {
+                    const fieldEl = createFieldElement(field, section.title, { withFueliX: field.type === 'textarea' });
+                    if (field.name === "Call Summary") {
+                        leftCol.appendChild(fieldEl);
+                    } else {
+                        rightCol.appendChild(fieldEl);
+                    }
+                }
+            });
+            grid.appendChild(leftCol);
+            grid.appendChild(rightCol);
+            contentContainer.appendChild(grid);
+        } else {
+            if (section.fields && section.fields.length > 0) {
+                const fieldsGrid = document.createElement('div');
+                fieldsGrid.className = 'pt-4';
+                let gridLayout;
+                if (section.title === "Team Member Details" || section.title === "Call Details") {
+                    gridLayout = document.createElement('div');
+                    gridLayout.className = 'grid grid-cols-1 md:grid-cols-5 gap-x-4 gap-y-4';
+                } else if (section.title === "Customer Loyalty & Support (CLS)") {
+                    gridLayout = document.createElement('div');
+                    gridLayout.className = 'grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-4';
+                } else {
+                    gridLayout = document.createElement('div');
+                    gridLayout.className = 'grid grid-cols-1 gap-y-4';
+                }
+                 section.fields.forEach(field => {
+                    gridLayout.appendChild(createFieldElement(field, section.title));
+                });
+                fieldsGrid.appendChild(gridLayout);
+                contentContainer.appendChild(fieldsGrid);
+            }
+            if (section.subsections) {
+                const subsectionsContainer = document.createElement('div');
+                subsectionsContainer.className = 'space-y-4 pt-4';
+                if (section.title === "Customer Experience Blueprint") {
+                    const legend = document.createElement('div');
+                    legend.className = 'text-xs text-gray-600 bg-gray-50 p-2 rounded-md mb-2 border border-gray-200';
+                    legend.innerHTML = `<span class="font-bold">Legend:</span> DW - Did Well, Prt - Partial, DD - Do Differently, NA - Not Applicable`;
+                    subsectionsContainer.appendChild(legend);
+                    const grid = document.createElement('div');
+                    grid.className = 'grid grid-cols-1 md:grid-cols-2 gap-x-6';
+                    const leftCol = document.createElement('div');
+                    leftCol.className = 'space-y-4';
+                    const rightCol = document.createElement('div');
+                    rightCol.className = 'space-y-4';
+                    const leftColTitles = ["Core", "Basic", "Critical"];
+                    const rightColTitles = ["Intermediate", "Advanced", "Sales Skills"];
+                    
+                    // Add left column sections in specified order
+                    leftColTitles.forEach(subTitle => {
+                        if (section.subsections[subTitle]) {
+                            const subSectionEl = renderSubsectionElement(subTitle, section.subsections[subTitle], true);
+                            leftCol.appendChild(subSectionEl);
+                        }
+                    });
+                    
+                    // Add right column sections in specified order
+                    rightColTitles.forEach(subTitle => {
+                        if (section.subsections[subTitle]) {
+                            const subSectionEl = renderSubsectionElement(subTitle, section.subsections[subTitle], true);
+                            rightCol.appendChild(subSectionEl);
+                        }
+                    });
+                    grid.appendChild(leftCol);
+                    grid.appendChild(rightCol);
+                    subsectionsContainer.appendChild(grid);
+                } else {
+                    for (const subTitle in section.subsections) {
+                        subsectionsContainer.appendChild(renderSubsectionElement(subTitle, section.subsections[subTitle], true));
+                    }
+                }
+                contentContainer.appendChild(subsectionsContainer);
+            }
+        }
+        sectionDiv.appendChild(contentContainer);
+        return sectionDiv;
+    }
+
+    function renderSubsectionElement(subTitle, fields, isCEB) {
+        const subSectionDiv = document.createElement('div');
+        
+        // Special styling for Critical Behaviors section
+        if (subTitle === "Critical Behaviors") {
+            subSectionDiv.className = 'bg-red-50 border border-red-200 rounded-md';
+        } else {
+            const bgClass = SUBSECTION_BG_COLORS[subTitle] || 'bg-gray-100';
+            subSectionDiv.classList.add(bgClass, 'rounded-md');
+        }
+        
+        const subTitleWrapper = document.createElement('div');
+        subTitleWrapper.className = 'flex justify-between items-start p-2';
+        
+        // Special color for Critical Behaviors title
+        if (subTitle === "Critical Behaviors") {
+            subTitleWrapper.classList.add('text-red-600');
+        } else {
+            const colorClass = SUBSECTION_COLORS[subTitle] || 'text-gray-800';
+            subTitleWrapper.classList.add(colorClass);
+        }
+        
+        const titleTextContainer = document.createElement('div');
+        titleTextContainer.className = 'flex flex-col mr-2';
+        const subTitleEl = document.createElement('h3');
+        subTitleEl.textContent = subTitle;
+        subTitleEl.className = `font-bold ${isCEB ? 'text-xs' : 'text-sm'}`;
+        titleTextContainer.appendChild(subTitleEl);
+        
+        // Add description for Critical Behaviors
+        if (subTitle === "Critical Behaviors") {
+            const descriptionEl = document.createElement('p');
+            descriptionEl.textContent = "Identify any critical behaviors observed during the interaction that require immediate attention or coaching. Select all that apply.";
+            descriptionEl.className = 'text-gray-600 text-xs mt-1';
+            titleTextContainer.appendChild(descriptionEl);
+        } else if (SUBSECTION_DESCRIPTIONS[subTitle]) {
+            const descriptionEl = document.createElement('p');
+            descriptionEl.textContent = SUBSECTION_DESCRIPTIONS[subTitle];
+            descriptionEl.className = `text-gray-600 ${isCEB ? 'text-10px' : 'text-xs'}`;
+            titleTextContainer.appendChild(descriptionEl);
+        }
+        
+        subTitleWrapper.appendChild(titleTextContainer);
+        subSectionDiv.appendChild(subTitleWrapper);
+        const fieldsContainer = document.createElement('div');
+        fieldsContainer.className = 'subsection-content pt-1 pb-2 border-t border-gray-400/30';
+        
+        if (subTitle === "Critical Behaviors") {
+            // Special 2-column grid for Critical Behaviors checkboxes
+            const grid = document.createElement('div');
+            grid.className = 'grid grid-cols-1 md:grid-cols-2 gap-x-6 px-3';
+            const leftCol = document.createElement('div');
+            leftCol.className = 'space-y-2';
+            const rightCol = document.createElement('div');
+            rightCol.className = 'space-y-2';
+            
+            fields.forEach((field, index) => {
+                const fieldEl = createFieldElement(field, subTitle, { isCriticalBehavior: true });
+                if (index < 12) { // First 12 items in left column
+                    leftCol.appendChild(fieldEl);
+                } else { // Remaining items in right column
+                    rightCol.appendChild(fieldEl);
+                }
+            });
+            
+            grid.appendChild(leftCol);
+            grid.appendChild(rightCol);
+            fieldsContainer.appendChild(grid);
+        } else if (subTitle === "CLS Skills Evaluation") {
+            const grid = document.createElement('div');
+            grid.className = 'grid grid-cols-1 md:grid-cols-2 md:gap-x-6 px-3';
+            const leftCol = document.createElement('div');
+            leftCol.className = 'grid grid-cols-1 divide-y divide-gray-400/30';
+            const rightCol = document.createElement('div');
+            rightCol.className = 'grid grid-cols-1 divide-y divide-gray-400/30';
+            fields.forEach((field, index) => {
+                const fieldEl = createFieldElement(field, subTitle, { isChecklist: true, isCEB: isCEB });
+                if (index < 4) {
+                    leftCol.appendChild(fieldEl);
+                } else {
+                    rightCol.appendChild(fieldEl);
+                }
+            });
+            grid.appendChild(leftCol);
+            grid.appendChild(rightCol);
+            fieldsContainer.appendChild(grid);
+        } else {
+            const fieldsGrid = document.createElement('div');
+            fieldsGrid.className = 'grid grid-cols-1 divide-y divide-gray-400/30 px-3';
+            fields.forEach(field => {
+                fieldsGrid.appendChild(createFieldElement(field, subTitle, { isChecklist: true, isCEB: isCEB }));
+            });
+            fieldsContainer.appendChild(fieldsGrid);
+        }
+        subSectionDiv.appendChild(fieldsContainer);
+        return subSectionDiv;
+    }
+
+    function createFieldElement(field, sectionTitle, options = {}) {
+        const container = document.createElement('div');
+        if (options.withFueliX) {
+            container.className = 'flex flex-col space-y-2';
+        } else if (options.isChecklist && field.type === 'radio') {
+            container.className = 'radio-grid-container';
+        } else if (sectionTitle === 'Sales Skills' && field.type === 'dropdown') {
+            container.className = 'pt-2 mt-2 border-t border-gray-400/30';
+        } else {
+            container.className = 'flex flex-col space-y-1';
+        }
+        
+        // Skip label creation for checkbox fields as they create their own labels
+        if (field.type !== 'checkbox' && field.type !== 'checkbox_with_text') {
+            const labelWrapper = document.createElement('div');
+            labelWrapper.className = 'pr-4';
+
+            const label = document.createElement('label');
+            
+            // Check if field is mandatory and add asterisk
+            const isMandatory = isMandatoryField(field.name, sectionTitle);
+            if (isMandatory) {
+                label.innerHTML = `${field.name} <span class="required-asterisk">*</span>`;
+            } else {
+                label.textContent = field.name;
+            }
+            
+            let fontWeight = options.withFueliX ? 'font-bold' : 'font-medium';
+            let fontSize = options.isCEB ? 'text-11px' : 'text-xs';
+            label.className = `${fontWeight} text-gray-700 ${fontSize}`;
+            
+            labelWrapper.appendChild(label);
+            
+            if (options.withFueliX) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'flex justify-between items-center';
+                wrapper.appendChild(labelWrapper);
+                const fuelixButton = document.createElement('button');
+                fuelixButton.type = 'button';
+                fuelixButton.id = `fuelix-btn-${field.name.replace(/[^a-zA-Z0-9]/g, '-')}`;
+                fuelixButton.className = 'bg-white border border-gray-300 text-gray-700 text-11px font-semibold px-2 py-0.5 rounded hover:bg-gray-100 flex items-center space-x-1';
+                fuelixButton.innerHTML = `<span>Rewrite with FueliX</span><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>`;
+                fuelixButton.addEventListener('click', () => handleRewriteClick(field.name));
+                wrapper.appendChild(fuelixButton);
+                container.appendChild(wrapper);
+            } else {
+                 container.appendChild(labelWrapper);
+            }
+        }
+        
+        const baseInputClasses = 'w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 bg-white';
+        switch (field.type) {
+            case 'textarea':
+                const textarea = document.createElement('textarea');
+                textarea.name = field.name;
+                textarea.rows = field.rows || 2;
+                textarea.className = baseInputClasses;
+                container.appendChild(textarea);
+                break;
+            case 'dropdown':
+                const selectWrapper = document.createElement('div');
+                if (sectionTitle !== 'Sales Skills') { selectWrapper.className = 'flex-grow'; }
+                const select = document.createElement('select');
+                select.name = field.name;
+                select.className = `${baseInputClasses} custom-select`;
+                const defaultOption = document.createElement('option');
+                defaultOption.textContent = 'Select...';
+                defaultOption.value = '';
+                defaultOption.disabled = true;
+                defaultOption.selected = true;
+                select.appendChild(defaultOption);
+                field.options.forEach(opt => {
+                    if (opt.trim()) {
+                        const option = document.createElement('option');
+                        option.value = opt.trim();
+                        option.textContent = opt.trim();
+                        select.appendChild(option);
+                    }
+                });
+                selectWrapper.appendChild(select);
+                container.appendChild(selectWrapper);
+                break;
+            case 'checkbox':
+            case 'checkbox_with_text':
+                const checkboxWrapper = document.createElement('div');
+                checkboxWrapper.className = 'flex items-center space-x-2';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.name = field.name;
+                checkbox.id = `checkbox-${field.name.replace(/[^a-zA-Z0-9]/g, '-')}`;
+                checkbox.className = 'h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500';
+                
+                const checkboxLabel = document.createElement('label');
+                checkboxLabel.textContent = field.name;
+                checkboxLabel.htmlFor = checkbox.id;
+                checkboxLabel.className = 'text-xs text-gray-700 leading-relaxed';
+                
+                checkboxWrapper.appendChild(checkbox);
+                checkboxWrapper.appendChild(checkboxLabel);
+                
+                // Add text field for "Other" option inline
+                if (field.type === 'checkbox_with_text' && field.textField) {
+                    const textField = document.createElement('input');
+                    textField.type = 'text';
+                    textField.name = field.textField;
+                    textField.placeholder = 'Specify other critical behavior...';
+                    textField.className = `${baseInputClasses} text-xs flex-1 ml-2`;
+                    textField.disabled = true; // Initially disabled
+                    
+                    // Enable/disable text field based on checkbox state
+                    checkbox.addEventListener('change', function() {
+                        textField.disabled = !this.checked;
+                        if (!this.checked) {
+                            textField.value = '';
+                        } else {
+                            textField.focus();
+                        }
+                    });
+                    
+                    checkboxWrapper.appendChild(textField);
+                }
+                
+                container.appendChild(checkboxWrapper);
+                break;
+            case 'radio':
+                // Determine if this is a 3-option or 4-option radio group
+                const hasThreeOptions = field.options.filter(opt => opt.trim() && opt.trim() !== 'Prt-disabled').length === 3;
+                
+                const radioContainer = document.createElement('div');
+                radioContainer.className = `radio-button-group ${hasThreeOptions ? 'three-options' : ''}`;
+                
+                field.options.forEach(opt => {
+                    if (opt.trim() && opt.trim() !== 'Prt-disabled') {
+                        const displayValue = opt.trim();
+                        const actualValue = opt.trim();
+                        
+                        const radioId = `${field.name.replace(/[^a-zA-Z0-9]/g, '-')}-${displayValue}`;
+                        const radioWrapper = document.createElement('div');
+                        radioWrapper.className = 'radio-item';
+
+                        const radio = document.createElement('input');
+                        radio.type = 'radio';
+                        radio.name = field.name;
+                        radio.value = actualValue;
+                        radio.id = radioId;
+                        radio.className = `custom-radio h-3.5 w-3.5 rounded-full border-gray-300 text-indigo-600 focus:ring-indigo-500`;
+                        
+                        const radioLabel = document.createElement('label');
+                        radioLabel.textContent = displayValue;
+                        radioLabel.htmlFor = radioId;
+                        radioLabel.className = `ml-1 block text-gray-800 ${options.isCEB ? 'text-11px' : 'text-xs'}`;
+
+                        // --- Enhanced Tooltip Logic ---
+                        const details = rubricDetails[field.name];
+                        const ratingText = details && details.ratings ? details.ratings[displayValue] : null;
+
+                        if (details) {
+                            const tooltipContainer = document.createElement('div');
+                            tooltipContainer.className = 'tooltip-container flex items-center';
+                            
+                            const tooltipSpan = document.createElement('span');
+                            tooltipSpan.className = 'tooltip-text';
+                            
+                            let tooltipHTML = '';
+                            if (details.observe && details.observe.length > 0) {
+                              tooltipHTML += `<b>What to Observe:</b><ul>${details.observe.map(item => `<li>- ${item}</li>`).join('')}</ul>`;
+                            }
+
+                            if(ratingText) {
+                               tooltipHTML += `<hr><b>${displayValue} Means:</b><p>${ratingText}</p>`;
+                            }
+
+                            tooltipSpan.innerHTML = tooltipHTML;
+
+                            tooltipContainer.appendChild(radio);
+                            tooltipContainer.appendChild(radioLabel);
+                            tooltipContainer.appendChild(tooltipSpan);
+                            radioWrapper.appendChild(tooltipContainer);
+                        } else {
+                            radioWrapper.appendChild(radio);
+                            radioWrapper.appendChild(radioLabel);
+                        }
+                        // --- END: Enhanced Tooltip Logic ---
+
+                        radioContainer.appendChild(radioWrapper);
+                    }
+                });
+                container.appendChild(radioContainer);
+                break;
+            default:
+                const inputWrapper = document.createElement('div');
+                inputWrapper.className = 'relative';
+
+                const input = document.createElement('input');
+                input.type = field.type;
+                input.name = field.name;
+                
+                if (field.name === "Sap ID") {
+                    input.placeholder = 'Enter Sap ID and press Enter';
+                } else if (field.name === "Duration (minutes)") {
+                    input.placeholder = 'Enter minutes (e.g., 15)';
+                } else {
+                    input.placeholder = `Enter ${field.name}...`;
+                }
+                
+                input.className = baseInputClasses;
+
+                inputWrapper.appendChild(input);
+
+                if (field.name === 'Sap ID') {
+                    // Add search icon
+                    const searchButton = document.createElement('button');
+                    searchButton.type = 'button';
+                    searchButton.id = 'sap-id-search-btn';
+                    searchButton.className = 'absolute top-1.5 right-2 text-gray-400 hover:text-gray-600 p-0.5 transition duration-200 focus:outline-none focus:ring-1 focus:ring-gray-300 rounded z-10';
+                    searchButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>`;
+                    searchButton.setAttribute('aria-label', 'Search SAP ID');
+                    searchButton.addEventListener('click', () => {
+                        const sapIdInput = document.querySelector('input[name="Sap ID"]');
+                        if (sapIdInput && sapIdInput.value.trim()) {
+                            triggerSapIdSearch(sapIdInput.value.trim());
+                        }
+                    });
+                    inputWrapper.appendChild(searchButton);
+
+                    const loader = document.createElement('div');
+                    loader.id = 'sap-id-loader';
+                    loader.className = 'loader !w-4 !h-4 !border-2 absolute top-1/2 right-2 -translate-y-1/2 hidden';
+                    inputWrapper.appendChild(loader);
+
+                    // Adjust input padding to make room for the search icon
+                    input.style.paddingRight = '2rem';
+                }
+                
+                container.appendChild(inputWrapper);
+                break;
+        }
+        return container;
+    }
+
+    // --- 3. FORM SUBMISSION & ROSTER LOOKUP ---
+    function triggerSapIdSearch(sapId) {
+      if (!sapId) return;
+      document.getElementById('sap-id-loader').classList.remove('hidden');
+      setFieldDisabled("Sap ID", true);
+      google.script.run
+        .withSuccessHandler(populateTeamDetails)
+        .withFailureHandler(handleLookupError)
+        .getTeamMemberDetails(sapId);
+    }
+
+    function handleSapIdEnter(event) {
+        if(event.key === 'Enter') {
+            event.preventDefault();
+            triggerSapIdSearch(event.target.value);
+        }
+    }
+
+    function populateTeamDetails(details) {
+        document.getElementById('sap-id-loader').classList.add('hidden');
+        setFieldDisabled("Sap ID", false);
+        if(details) {
+            document.querySelector('input[name="Team Member"]').value = details["Team Member"] || '';
+            document.querySelector('input[name="Team Leader"]').value = details["Team Leader"] || '';
+            document.querySelector('input[name="Operations Manager"]').value = details["Operations Manager"] || '';
+            document.querySelector('input[name="Line of Business"]').value = details["Line of Business"] || '';
+            showMessage('Team member details populated.', true);
+        } else {
+            showMessage('SAP ID not found in roster.', false);
+        }
+    }
+
+    function handleLookupError(error) {
+        document.getElementById('sap-id-loader').classList.add('hidden');
+        setFieldDisabled("Sap ID", false);
+        showMessage(error.message, false);
+    }
+    
+    function setFieldDisabled(fieldName, isDisabled) {
+        const field = document.querySelector(`input[name="${fieldName}"]`);
+        if(field) {
+            field.disabled = isDisabled;
+        }
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      
+      // Validate mandatory sections before submitting
+      const validationResult = validateMandatoryFields();
+      if (!validationResult.isValid) {
+        showElegantErrorPanel(validationResult.errors);
+        return;
+      }
+      
+      // Show loading modal
+      showSubmissionLoadingModal();
+      
+      const formData = new FormData(document.getElementById('qa-form'));
+      const dataObject = Object.fromEntries(formData.entries());
+      
+      if (currentMode === 'edit' && currentEditingRecordId) {
+        // Update existing evaluation
+        google.script.run
+          .withSuccessHandler(handleUpdateSuccess)
+          .withFailureHandler(handleSubmitError)
+          .updateExistingEvaluation(currentEditingRecordId, dataObject, '');
+      } else {
+        // Create new evaluation
+        google.script.run
+          .withSuccessHandler(handleSubmitSuccess)
+          .withFailureHandler(handleSubmitError)
+          .saveFormData(dataObject);
+      }
+    }
+
+    function handleSubmitSuccess(response) {
+      hideSubmissionLoadingModal();
+      
+      // Clear the saved draft after successful submission
+      clearSavedDraft();
+      
+      // Extract form data for display
+      const formData = new FormData(document.getElementById('qa-form'));
+      const dataObject = Object.fromEntries(formData.entries());
+      
+      // Show success modal with form details
+      showSuccessModal(dataObject, response.recordId || generateMockRecordId());
+    }
+
+    function handleUpdateSuccess(response) {
+      hideSubmissionLoadingModal();
+      
+      if (response.success) {
+        // Extract form data for display
+        const formData = new FormData(document.getElementById('qa-form'));
+        const dataObject = Object.fromEntries(formData.entries());
+        
+        // Show success modal with updated evaluation details
+        showUpdateSuccessModal(dataObject, response.recordId, response.version);
+        
+        // Reset edit mode state
+        currentEditingRecordId = null;
+        originalFormData = null;
+        
+        // Switch back to create mode
+        setTimeout(() => {
+          switchToCreateMode();
+        }, 3000);
+      } else {
+        showMessage(response.message, false);
+      }
+    }
+
+    function handleSubmitError(error) {
+      hideSubmissionLoadingModal();
+      showMessage(error.message, false);
+    }
+
+    function generateMockRecordId() {
+      const date = new Date();
+      const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
+      const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase();
+      return `QA-${dateStr}-${randomStr}`;
+    }
+    
+    // --- 4. AI SCRIPT ANALYSIS & REWRITE FUNCTIONS ---
+function openScriptModal() {
+    document.body.classList.add('modal-open');
+    document.documentElement.classList.add('modal-open');
+    document.getElementById('script-modal').classList.remove('hidden');
+    document.getElementById('apply-suggestions-btn').classList.add('hidden');
+    if (analysisResultData) {
+        displayAnalysisResults(analysisResultData);
+    } else {
+        document.getElementById('analysis-results').innerHTML = `<p id="analysis-placeholder" class="text-gray-400">Results will be shown here after analysis.</p>`;
+    }
+}
+    function closeScriptModal() {
+        document.body.classList.remove('modal-open');
+        document.documentElement.classList.remove('modal-open');
+        document.getElementById('script-modal').classList.add('hidden');
+    }
+
+    function handleAnalyzeScript() {
+        const scriptText = document.getElementById('call-script-input').value;
+        if(!scriptText.trim()) {
+            showMessage("Please paste a script before analyzing.", false);
+            return;
+        }
+        
+        const resultsDiv = document.getElementById('analysis-results');
+        resultsDiv.innerHTML = `<div class="absolute inset-0 bg-gray-50 bg-opacity-80 flex flex-col items-center justify-center p-4">
+                                        <div class="loader !w-8 !h-8"></div>
+                                        <p class="mt-3 text-sm text-gray-600 font-semibold">FueliX is analyzing the script<span class="ellipsis"></span></p>
+                                       </div>`;
+        document.getElementById('analyze-script-btn').disabled = true;
+
+        google.script.run
+            .withSuccessHandler(displayAnalysisResults)
+            .withFailureHandler(handleAnalysisError)
+            .analyzeCallScript(scriptText);
+    }
+
+    function displayAnalysisResults(result) {
+        document.getElementById('analyze-script-btn').disabled = false;
+        
+        const resultsDiv = document.getElementById('analysis-results');
+        resultsDiv.innerHTML = ''; // Clear previous results
+
+        if (result && result.skillEvaluations && typeof result.skillEvaluations === 'object' && !Array.isArray(result.skillEvaluations)) {
+            analysisResultData = result; // Store results globally
+            
+            // Define the desired order for displaying sections
+            const sectionOrder = [
+                'Core',
+                'Basic', 
+                'Critical',
+                'Intermediate',
+                'Advanced',
+                'Sales Skills',
+                'CLS Skills Evaluation'
+            ];
+            
+            // Display skill evaluations in the specified order
+            sectionOrder.forEach(subSectionName => {
+                if (result.skillEvaluations[subSectionName]) {
+                    const skills = result.skillEvaluations[subSectionName];
+                    const titleEl = document.createElement('h4');
+                    titleEl.className = 'font-bold text-sm mt-4 mb-2 text-gray-800';
+                    titleEl.textContent = subSectionName;
+                    resultsDiv.appendChild(titleEl);
+
+                    const table = document.createElement('table');
+                    table.className = 'w-full text-left border-collapse';
+                    const thead = document.createElement('thead');
+                    thead.innerHTML = `
+                        <tr class="bg-gray-100">
+                            <th class="p-2 border text-10px font-semibold text-gray-600 w-1/3">Skill Name</th>
+                            <th class="p-2 border text-10px font-semibold text-gray-600 w-1/6">Suggested Rating</th>
+                            <th class="p-2 border text-10px font-semibold text-gray-600">Remarks</th>
+                        </tr>
+                    `;
+                    table.appendChild(thead);
+
+                    const tbody = document.createElement('tbody');
+                    if (Array.isArray(skills)) {
+                        skills.forEach(skill => {
+                            const row = document.createElement('tr');
+                            row.className = 'border-b';
+                            row.innerHTML = `
+                                <td class="p-2 border text-10px">${skill.skillName}</td>
+                                <td class="p-2 border text-10px text-center font-semibold">${skill.rating}</td>
+                                <td class="p-2 border text-10px">${skill.remarks}</td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                    }
+                    table.appendChild(tbody);
+                    resultsDiv.appendChild(table);
+                }
+            });
+            document.getElementById('apply-suggestions-btn').classList.remove('hidden');
+        } else {
+            handleAnalysisError({message: "AI response was not in the expected format. Please check the backend logs for the exact response."});
+        }
+    }
+    
+    function applySuggestions() {
+        if (!analysisResultData) {
+            showMessage("No analysis data to apply.", false);
+            return;
+        }
+
+        console.log('=== APPLY SUGGESTIONS DEBUG START ===');
+        console.log('Analysis result data:', analysisResultData);
+
+        let fieldsApplied = 0;
+        let fieldsNotFound = [];
+        let fieldsWithErrors = [];
+
+        // Apply skill evaluations
+        if(analysisResultData.skillEvaluations) {
+            console.log('Processing skill evaluations...');
+            for (const subSectionName in analysisResultData.skillEvaluations) {
+                const skills = analysisResultData.skillEvaluations[subSectionName];
+                console.log(`Processing ${subSectionName} skills:`, skills);
+                
+                // Skip CLS Skills Evaluation from auto-application (keep in results but don't auto-apply)
+                if (subSectionName === "CLS Skills Evaluation") {
+                    console.log('Skipping CLS Skills Evaluation from auto-application');
+                    continue;
+                }
+                
+                if (Array.isArray(skills)) {
+                    skills.forEach(skill => {
+                        try {
+                            console.log(`Applying skill: "${skill.skillName}" with rating: "${skill.rating}"`);
+                            
+                            // Handle radio buttons
+                            const radios = document.querySelectorAll(`input[name="${skill.skillName}"]`);
+                            if (radios.length > 0) {
+                                let radioSet = false;
+                                radios.forEach(radio => {
+                                    if (radio.value === skill.rating) {
+                                        radio.checked = true;
+                                        radioSet = true;
+                                        console.log(`✅ Set radio "${skill.skillName}" to "${skill.rating}"`);
+                                        fieldsApplied++;
+                                    }
+                                });
+                                if (!radioSet) {
+                                    console.log(`❌ Radio value "${skill.rating}" not found for "${skill.skillName}"`);
+                                    fieldsNotFound.push(`${skill.skillName}[${skill.rating}]`);
+                                }
+                            } else {
+                                // Handle dropdowns
+                                const dropdown = document.querySelector(`select[name="${skill.skillName}"]`);
+                                if(dropdown) {
+                                    let optionSet = false;
+                                    for(let i=0; i<dropdown.options.length; i++) {
+                                        if(dropdown.options[i].value === skill.rating) {
+                                            dropdown.selectedIndex = i;
+                                            optionSet = true;
+                                            console.log(`✅ Set dropdown "${skill.skillName}" to "${skill.rating}"`);
+                                            fieldsApplied++;
+                                            break;
+                                        }
+                                    }
+                                    if (!optionSet) {
+                                        console.log(`❌ Dropdown option "${skill.rating}" not found for "${skill.skillName}"`);
+                                        fieldsNotFound.push(`${skill.skillName}[${skill.rating}]`);
+                                    }
+                                } else {
+                                    console.log(`❌ Field not found: "${skill.skillName}"`);
+                                    fieldsNotFound.push(skill.skillName);
+                                }
+                            }
+                        } catch (error) {
+                            console.error(`Error applying skill "${skill.skillName}":`, error);
+                            fieldsWithErrors.push(`${skill.skillName}: ${error.message}`);
+                        }
+                    });
+                }
+            }
+        }
+
+        // Apply text area content with better error handling
+        const textAreaMappings = [
+            { aiField: 'callSummary', formField: 'Call Summary' },
+            { aiField: 'highlights', formField: 'Highlights' },
+            { aiField: 'lowlights', formField: 'Lowlights/Recommendation' }
+        ];
+
+        textAreaMappings.forEach(mapping => {
+            try {
+                if(analysisResultData[mapping.aiField]) {
+                    const textarea = document.querySelector(`textarea[name="${mapping.formField}"]`);
+                    if (textarea) {
+                        textarea.value = analysisResultData[mapping.aiField];
+                        console.log(`✅ Set textarea "${mapping.formField}"`);
+                        fieldsApplied++;
+                    } else {
+                        console.log(`❌ Textarea not found: "${mapping.formField}"`);
+                        fieldsNotFound.push(mapping.formField);
+                    }
+                }
+            } catch (error) {
+                console.error(`Error applying textarea "${mapping.formField}":`, error);
+                fieldsWithErrors.push(`${mapping.formField}: ${error.message}`);
+            }
+        });
+
+        // Apply Call Driver Level 1 with better error handling
+        if(analysisResultData.callDriverLevel1) {
+            try {
+                const level1Dropdown = document.querySelector('select[name="Call Driver Level 1"]');
+                if(level1Dropdown) {
+                    let level1Set = false;
+                    for(let i=0; i<level1Dropdown.options.length; i++) {
+                        if(level1Dropdown.options[i].value === analysisResultData.callDriverLevel1) {
+                            level1Dropdown.selectedIndex = i;
+                            // Trigger change event to populate Level 2 options
+                            level1Dropdown.dispatchEvent(new Event('change'));
+                            level1Set = true;
+                            console.log(`✅ Set Call Driver Level 1 to "${analysisResultData.callDriverLevel1}"`);
+                            fieldsApplied++;
+                            break;
+                        }
+                    }
+                    if (!level1Set) {
+                        console.log(`❌ Call Driver Level 1 option not found: "${analysisResultData.callDriverLevel1}"`);
+                        fieldsNotFound.push(`Call Driver Level 1[${analysisResultData.callDriverLevel1}]`);
+                    }
+                } else {
+                    console.log(`❌ Call Driver Level 1 dropdown not found`);
+                    fieldsNotFound.push('Call Driver Level 1');
+                }
+            } catch (error) {
+                console.error('Error applying Call Driver Level 1:', error);
+                fieldsWithErrors.push(`Call Driver Level 1: ${error.message}`);
+            }
+        }
+
+        // Apply Call Driver Level 2 (if provided) with better error handling
+        if(analysisResultData.callDriverLevel2) {
+            // Wait a moment for the cascading dropdown to populate
+            setTimeout(() => {
+                try {
+                    const level2Dropdown = document.querySelector('select[name="Call Driver Level 2"]');
+                    if(level2Dropdown) {
+                        let level2Set = false;
+                        for(let i=0; i<level2Dropdown.options.length; i++) {
+                            if(level2Dropdown.options[i].value === analysisResultData.callDriverLevel2) {
+                                level2Dropdown.selectedIndex = i;
+                                level2Set = true;
+                                console.log(`✅ Set Call Driver Level 2 to "${analysisResultData.callDriverLevel2}"`);
+                                break;
+                            }
+                        }
+                        if (!level2Set) {
+                            console.log(`❌ Call Driver Level 2 option not found: "${analysisResultData.callDriverLevel2}"`);
+                        }
+                    } else {
+                        console.log(`❌ Call Driver Level 2 dropdown not found`);
+                    }
+                } catch (error) {
+                    console.error('Error applying Call Driver Level 2:', error);
+                }
+            }, 100);
+        }
+
+        console.log('=== APPLY SUGGESTIONS SUMMARY ===');
+        console.log(`Fields applied: ${fieldsApplied}`);
+        console.log(`Fields not found: ${fieldsNotFound.length}`);
+        console.log(`Fields with errors: ${fieldsWithErrors.length}`);
+        
+        if (fieldsNotFound.length > 0) {
+            console.log('Fields not found:', fieldsNotFound);
+        }
+        
+        if (fieldsWithErrors.length > 0) {
+            console.log('Fields with errors:', fieldsWithErrors);
+        }
+
+        console.log('=== APPLY SUGGESTIONS DEBUG END ===');
+
+        if (fieldsApplied > 0) {
+            showMessage(`Form pre-filled from script analysis: ${fieldsApplied} fields applied successfully.`, true);
+        } else {
+            showMessage("Script analysis completed, but no fields were auto-populated. Check console for details.", false);
+        }
+        
+        closeScriptModal();
+    }
+
+    function handleAnalysisError(error) {
+        document.getElementById('analyze-script-btn').disabled = false;
+        const resultsDiv = document.getElementById('analysis-results');
+        resultsDiv.innerHTML = `<p class="text-red-600 p-4"><b>Analysis Failed:</b><br>${error.message}</p>`;
+        showMessage(`Script analysis failed: ${error.message}`, false);
+    }
+
+    function handleRewriteClick(fieldName) {
+      const promptKey = fieldNameToPromptKey[fieldName];
+      const textarea = document.querySelector(`textarea[name="${fieldName}"]`);
+      const button = document.getElementById(`fuelix-btn-${fieldName.replace(/[^a-zA-Z0-9]/g, '-')}`);
+      if (!textarea || !button || !promptKey || !textarea.value.trim()) return;
+
+      const originalButtonText = button.innerHTML;
+      button.innerHTML = `<span>Rewriting...</span><div class="loader !w-3 !h-3 !border-2 !border-t-gray-700"></div>`;
+      button.disabled = true;
+      textarea.disabled = true;
+
+      google.script.run
+        .withSuccessHandler((rewrittenText) => {
+          textarea.value = rewrittenText;
+          button.innerHTML = originalButtonText;
+          button.disabled = false;
+          textarea.disabled = false;
+        })
+        .withFailureHandler((error) => {
+          showMessage(`Rewrite failed: ${error.message}`, false);
+          button.innerHTML = originalButtonText;
+          button.disabled = false;
+          textarea.disabled = false;
+        })
+        .rewriteText(textarea.value, promptKey);
+    }
+
+    function handleRewriteAllClick() {
+        const button = document.getElementById('rewrite-all-btn');
+        if (!button) return;
+
+        const fieldsToRewrite = Object.keys(fieldNameToPromptKey).map(fieldName => {
+            const textarea = document.querySelector(`textarea[name="${fieldName}"]`);
+            return { fieldName, textarea };
+        }).filter(item => item.textarea && item.textarea.value.trim() !== '');
+        
+        if (fieldsToRewrite.length === 0) {
+             return;
+        }
+
+        const originalButtonText = button.innerHTML;
+        button.innerHTML = `<span>Rewriting All...</span><div class="loader !w-3.5 !h-3.5 !border-2 !border-t-green-800"></div>`;
+        button.disabled = true;
+        
+        let completedCount = 0;
+        const totalToRewrite = fieldsToRewrite.length;
+
+        const onComplete = () => {
+            completedCount++;
+            if (completedCount === totalToRewrite) {
+                button.innerHTML = originalButtonText;
+                button.disabled = false;
+            }
+        };
+
+        fieldsToRewrite.forEach(item => {
+            const { fieldName, textarea } = item;
+            const promptKey = fieldNameToPromptKey[fieldName];
+            
+            google.script.run
+                .withSuccessHandler((rewrittenText) => {
+                    textarea.value = rewrittenText;
+                    onComplete();
+                })
+                .withFailureHandler((error) => {
+                    console.error(`Failed to rewrite ${fieldName}:`, error);
+                    showMessage(`Failed to rewrite ${fieldName}`, false);
+                    onComplete();
+                })
+                .rewriteText(textarea.value, promptKey);
+        });
+    }
+
+    // --- 5. CASCADING DROPDOWN FUNCTIONALITY ---
+    let callDriverMapping = {}; // Global variable to store mapping
+    
+    function loadCallDriverMapping() {
+        // Get the mapping from the form structure
+        google.script.run
+            .withSuccessHandler(data => {
+                if (data && data["Call Driver Mapping"]) {
+                    callDriverMapping = data["Call Driver Mapping"];
+                    console.log("Call Driver Mapping loaded:", callDriverMapping);
+                    // Setup cascading dropdown functionality after mapping is loaded
+                    setupCascadingDropdowns();
+                } else {
+                    console.warn("No Call Driver Mapping found in dropdown options");
+                    setupCascadingDropdowns(); // Still setup the event listeners
+                }
+            })
+            .withFailureHandler(error => {
+                console.error("Could not load call driver mapping:", error);
+                setupCascadingDropdowns(); // Still setup the event listeners
+            })
+            .getDropdownOptions();
+    }
+    
+    function setupCascadingDropdowns() {
+        const level1Dropdown = document.querySelector('select[name="Call Driver Level 1"]');
+        const level2Dropdown = document.querySelector('select[name="Call Driver Level 2"]');
+        
+        if (!level1Dropdown || !level2Dropdown) return;
+        
+        level1Dropdown.addEventListener('change', function() {
+            const selectedLevel1 = this.value;
+            console.log("Level 1 selected:", selectedLevel1);
+            
+            // Clear Level 2 dropdown
+            level2Dropdown.innerHTML = '';
+            
+            // Add default option
+            const defaultOption = document.createElement('option');
+            defaultOption.textContent = 'Select...';
+            defaultOption.value = '';
+            defaultOption.disabled = true;
+            defaultOption.selected = true;
+            level2Dropdown.appendChild(defaultOption);
+            
+            // Populate Level 2 options based on Level 1 selection
+            if (selectedLevel1 && callDriverMapping[selectedLevel1]) {
+                console.log("Level 2 options for", selectedLevel1, ":", callDriverMapping[selectedLevel1]);
+                callDriverMapping[selectedLevel1].forEach(level2Option => {
+                    const option = document.createElement('option');
+                    option.value = level2Option;
+                    option.textContent = level2Option;
+                    level2Dropdown.appendChild(option);
+                });
+                level2Dropdown.disabled = false;
+            } else {
+                level2Dropdown.disabled = true;
+                console.log("No mapping found for:", selectedLevel1);
+            }
+        });
+        
+        // Initially disable Level 2 dropdown
+        level2Dropdown.disabled = true;
+    }
+
+    // --- 6. VALIDATION FUNCTIONS ---
+    function validateMandatoryFields() {
+        const errors = [];
+        
+        // Validate Customer Experience Blueprint section (all radio buttons must be selected)
+        const cebRadioGroups = [
+            // Core skills
+            "Willingness to Help", "Warm and Energetic Greeting that Connects with the Customer", "Listen & Retain",
+            // Critical skills  
+            "Secure the Customer's Identity Based on Department Guidelines", "Probe Using a Combination of Open-ended and Closed-ended Questions", 
+            "Investigate & Check All Applicable Resources", "Offer Solutions / Explanations / Options", 
+            "Begin Processing Transaction, Adding Notes and Updating Account Information when Appropriate",
+            // Basic skills
+            "Confirm What You Know and Paraphrase Customer", "Check for Understanding", 
+            "Lead with a Benefit Prior to Asking Questions and Securing the Account", "Summarize Solution", 
+            "End on a High Note with a Personalized Close", "Reinforce the Extras You Did",
+            // Intermediate skills
+            "Early Bridge to Value When Appropriate", "Later Bridge to Value when Appropriate / Value Proposition", 
+            "Lead Customer to Accept an Option or Solution", "Check for Satisfaction",
+            // Advanced skills
+            "Overcome Objections if Necessary", "Acknowledge (Empathy When Needed)",
+            // Sales skills
+            "Learn from Your Customer", "Handling Early Objections", "Customer Intimacy", "Value Proposition"
+        ];
+        
+        cebRadioGroups.forEach(fieldName => {
+            const radios = document.querySelectorAll(`input[name="${fieldName}"]`);
+            const isSelected = Array.from(radios).some(radio => radio.checked);
+            if (!isSelected) {
+                errors.push(`Customer Experience Blueprint: "${fieldName}" must be selected`);
+            }
+        });
+        
+        // Validate Customer Experience Blueprint dropdown
+        const bridgingDropdown = document.querySelector('select[name="What type of bridging was provided?"]');
+        if (bridgingDropdown && !bridgingDropdown.value) {
+            errors.push('Customer Experience Blueprint: "What type of bridging was provided?" must be selected');
+        }
+        
+        // Validate Call Evaluation Details section (all fields must be filled)
+        const callEvalFields = [
+            { name: "Call Driver Level 1", type: "dropdown" },
+            { name: "Call Driver Level 2", type: "dropdown" },
+            { name: "Call Summary", type: "textarea" },
+            { name: "Highlights", type: "textarea" },
+            { name: "Lowlights/Recommendation", type: "textarea" }
+        ];
+        
+        callEvalFields.forEach(field => {
+            if (field.type === "dropdown") {
+                const dropdown = document.querySelector(`select[name="${field.name}"]`);
+                if (dropdown && !dropdown.value) {
+                    errors.push(`Call Evaluation Details: "${field.name}" must be selected`);
+                }
+            } else if (field.type === "textarea") {
+                const textarea = document.querySelector(`textarea[name="${field.name}"]`);
+                if (textarea && !textarea.value.trim()) {
+                    errors.push(`Call Evaluation Details: "${field.name}" must be filled`);
+                }
+            }
+        });
+        
+        if (errors.length > 0) {
+            return {
+                isValid: false,
+                message: `Please complete the following mandatory fields:\n\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? `\n\n...and ${errors.length - 5} more fields` : ''}`
+            };
+        }
+        
+        return { isValid: true };
+    }
+
+    // --- MANDATORY FIELD HELPER FUNCTIONS ---
+    function isMandatoryField(fieldName, sectionTitle) {
+        // Customer Experience Blueprint - all radio buttons and dropdown are mandatory
+        const cebMandatoryFields = [
+            "Willingness to Help", "Warm and Energetic Greeting that Connects with the Customer", "Listen & Retain",
+            "Secure the Customer's Identity Based on Department Guidelines", "Probe Using a Combination of Open-ended and Closed-ended Questions", 
+            "Investigate & Check All Applicable Resources", "Offer Solutions / Explanations / Options", 
+            "Begin Processing Transaction, Adding Notes and Updating Account Information when Appropriate",
+            "Confirm What You Know and Paraphrase Customer", "Check for Understanding", 
+            "Lead with a Benefit Prior to Asking Questions and Securing the Account", "Summarize Solution", 
+            "End on a High Note with a Personalized Close", "Reinforce the Extras You Did",
+            "Early Bridge to Value When Appropriate", "Later Bridge to Value when Appropriate / Value Proposition", 
+            "Lead Customer to Accept an Option or Solution", "Check for Satisfaction",
+            "Overcome Objections if Necessary", "Acknowledge (Empathy When Needed)",
+            "Learn from Your Customer", "Handling Early Objections", "Customer Intimacy", "Value Proposition",
+            "What type of bridging was provided?"
+        ];
+        
+        // Call Evaluation Details - all fields are mandatory
+        const callEvalMandatoryFields = [
+            "Call Driver Level 1", "Call Driver Level 2", "Call Summary", "Highlights", "Lowlights/Recommendation"
+        ];
+        
+        // Team Member Details - all fields are mandatory
+        const teamMemberMandatoryFields = [
+            "Sap ID", "Team Member", "Team Leader", "Operations Manager", "Line of Business"
+        ];
+        
+        // Call Details - all fields are mandatory
+        const callDetailsMandatoryFields = [
+            "Interaction Date", "Customer's BAN", "FLP Conversation ID", "Listening Type", "Duration (minutes)"
+        ];
+        
+        return cebMandatoryFields.includes(fieldName) || 
+               callEvalMandatoryFields.includes(fieldName) ||
+               teamMemberMandatoryFields.includes(fieldName) ||
+               callDetailsMandatoryFields.includes(fieldName);
+    }
+
+    function isMandatorySection(sectionTitle) {
+        return sectionTitle === "Customer Experience Blueprint" || 
+               sectionTitle === "Call Evaluation Details" ||
+               sectionTitle === "Team Member Details" ||
+               sectionTitle === "Call Details";
+    }
+
+    // --- 8. UTILITY FUNCTIONS ---
+    function setDefaultEstDate() {
+        const interactionDateInput = document.querySelector('input[name="Interaction Date"]');
+        if (interactionDateInput) {
+          try {
+            const estDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+            const year = estDate.getFullYear();
+            const month = String(estDate.getMonth() + 1).padStart(2, '0');
+            const day = String(estDate.getDate()).padStart(2, '0');
+            interactionDateInput.value = `${year}-${month}-${day}`;
+          } catch (e) {
+            console.error("Could not set EST date, falling back to local date.", e);
+            interactionDateInput.valueAsDate = new Date();
+          }
+        }
+    }
+    
+    function showError(error) {
+        document.getElementById('loader').classList.add('hidden');
+        showMessage(`Error: ${error.message}`, false);
+    }
+    function showMessage(message, isSuccess) {
+      const statusDiv = document.getElementById('status-message');
+      const baseClasses = 'border px-3 py-1.5 rounded-md text-xs';
+      const colorClass = isSuccess 
+        ? 'bg-green-100 border-green-300 text-green-800' 
+        : 'bg-red-100 border-red-300 text-red-800';
+      statusDiv.className = `${baseClasses} ${colorClass}`;
+      statusDiv.textContent = message;
+      setTimeout(() => {
+          statusDiv.innerHTML = '';
+          statusDiv.className = '';
+      }, 5000);
+    }
+    function setSubmitting(isSubmitting) {
+        document.getElementById('submit-button').classList.toggle('hidden', isSubmitting);
+        document.getElementById('submit-loader').classList.toggle('hidden', !isSubmitting);
+    }
+
+    // --- 7. ELEGANT ERROR PANEL & MODAL FUNCTIONS ---
+    function showElegantErrorPanel(errors) {
+        const errorPanel = document.getElementById('error-panel');
+        const errorList = document.getElementById('error-list');
+        const errorProgress = document.getElementById('error-progress');
+        
+        // Clear previous errors
+        errorList.innerHTML = '';
+        
+        // Add error items
+        errors.slice(0, 5).forEach(error => {
+            const errorItem = document.createElement('div');
+            errorItem.className = 'error-item';
+            errorItem.textContent = `• ${error}`;
+            errorItem.addEventListener('click', () => {
+                // Try to scroll to the field mentioned in the error
+                const fieldMatch = error.match(/"([^"]+)"/);
+                if (fieldMatch) {
+                    const fieldName = fieldMatch[1];
+                    const field = document.querySelector(`input[name="${fieldName}"], select[name="${fieldName}"], textarea[name="${fieldName}"]`);
+                    if (field) {
+                        field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        field.focus();
+                    }
+                }
+            });
+            errorList.appendChild(errorItem);
+        });
+        
+        // Add progress indicator
+        const totalMandatory = 40; // 25 CEB fields + 5 Call Eval fields + 5 Team Member fields + 5 Call Details fields
+        const completed = totalMandatory - errors.length;
+        errorProgress.textContent = `${completed} of ${totalMandatory} mandatory fields completed`;
+        
+        if (errors.length > 5) {
+            const moreItem = document.createElement('div');
+            moreItem.className = 'error-item opacity-75';
+            moreItem.textContent = `• ...and ${errors.length - 5} more fields`;
+            errorList.appendChild(moreItem);
+        }
+        
+        // Show panel with animation and scroll to top
+        errorPanel.classList.remove('hidden');
+        setTimeout(() => {
+            errorPanel.classList.add('show');
+            errorPanel.classList.add('shake');
+            setTimeout(() => errorPanel.classList.remove('shake'), 600);
+            // Scroll to top of page to show error panel
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 10);
+        
+        // Auto-dismiss after 8 seconds
+        setTimeout(() => {
+            hideErrorPanel();
+        }, 8000);
+        
+        // Setup close button
+        document.getElementById('close-error-panel').onclick = hideErrorPanel;
+    }
+    
+    function hideErrorPanel() {
+        const errorPanel = document.getElementById('error-panel');
+        errorPanel.classList.remove('show');
+        setTimeout(() => {
+            errorPanel.classList.add('hidden');
+        }, 400);
+    }
+    
+    function showSubmissionLoadingModal() {
+        const overlay = document.getElementById('submission-overlay');
+        const modal = document.getElementById('loading-modal');
+        
+        // Update modal text based on current mode
+        const modalTitle = modal.querySelector('h3');
+        const modalDescription = modal.querySelector('p');
+        
+        if (currentMode === 'edit' && currentEditingRecordId) {
+            modalTitle.textContent = 'Updating Evaluation';
+            modalDescription.textContent = 'Please wait while we save your changes';
+        } else {
+            modalTitle.textContent = 'Submitting Evaluation';
+            modalDescription.textContent = 'Please wait while we process your submission';
+        }
+        
+        overlay.classList.remove('hidden');
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 10);
+    }
+    
+    function hideSubmissionLoadingModal() {
+        const overlay = document.getElementById('submission-overlay');
+        const modal = document.getElementById('loading-modal');
+        
+        modal.classList.remove('show');
+        setTimeout(() => {
+            overlay.classList.add('hidden');
+        }, 300);
+    }
+    
+    function showSuccessModal(formData, recordId) {
+        const overlay = document.getElementById('success-overlay');
+        const modal = document.getElementById('success-modal');
+        
+        // Populate team member details
+        const teamDetailsDisplay = document.getElementById('team-details-display');
+        teamDetailsDisplay.innerHTML = '';
+        
+        const teamFields = ['Sap ID', 'Team Member', 'Team Leader', 'Operations Manager', 'Line of Business'];
+        teamFields.forEach(field => {
+            if (formData[field]) {
+                const item = document.createElement('div');
+                item.className = 'flex flex-col space-y-1';
+                item.innerHTML = `
+                    <span class="font-medium text-gray-600">${field}:</span>
+                    <span class="text-gray-800 pl-2">${formData[field]}</span>
+                `;
+                teamDetailsDisplay.appendChild(item);
+            }
+        });
+        
+        // Populate call details
+        const callDetailsDisplay = document.getElementById('call-details-display');
+        callDetailsDisplay.innerHTML = '';
+        
+        const callFields = ['Interaction Date', 'Customer BAN', 'FLP Conversation ID', 'Listening Type', 'Duration (minutes)'];
+        callFields.forEach(field => {
+            if (formData[field]) {
+                const item = document.createElement('div');
+                item.className = 'flex flex-col space-y-1';
+                let displayValue = formData[field];
+                if (field === 'Duration (minutes)') {
+                    displayValue = `${formData[field]} minutes`;
+                }
+                item.innerHTML = `
+                    <span class="font-medium text-gray-600">${field.replace(' (minutes)', '')}:</span>
+                    <span class="text-gray-800 pl-2">${displayValue}</span>
+                `;
+                callDetailsDisplay.appendChild(item);
+            }
+        });
+        
+        // Set record ID
+        document.getElementById('record-id-display').textContent = recordId;
+        
+        // Setup copy functionality
+        setupCopyFunctionality(recordId);
+        
+        // Setup close functionality
+        document.getElementById('close-success-modal').onclick = () => {
+            hideSuccessModal();
+            clearForm();
+        };
+        
+        // Show modal with animation
+        overlay.classList.remove('hidden');
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 10);
+    }
+    
+    function showUpdateSuccessModal(formData, recordId, version) {
+        const overlay = document.getElementById('success-overlay');
+        const modal = document.getElementById('success-modal');
+        
+        // Update the header for edit mode
+        const headerDiv = modal.querySelector('.text-center.mb-6');
+        headerDiv.innerHTML = `
+            <div class="celebration-icon w-16 h-16 mx-auto mb-4 bg-amber-100 rounded-full flex items-center justify-center">
+                <svg class="w-8 h-8 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Evaluation Updated Successfully!</h2>
+            <p class="text-gray-600">Your changes have been saved. Version: ${version}</p>
+        `;
+        
+        // Populate team member details
+        const teamDetailsDisplay = document.getElementById('team-details-display');
+        teamDetailsDisplay.innerHTML = '';
+        
+        const teamFields = ['Sap ID', 'Team Member', 'Team Leader', 'Operations Manager', 'Line of Business'];
+        teamFields.forEach(field => {
+            if (formData[field]) {
+                const item = document.createElement('div');
+                item.className = 'flex flex-col space-y-1';
+                item.innerHTML = `
+                    <span class="font-medium text-gray-600">${field}:</span>
+                    <span class="text-gray-800 pl-2">${formData[field]}</span>
+                `;
+                teamDetailsDisplay.appendChild(item);
+            }
+        });
+        
+        // Populate call details
+        const callDetailsDisplay = document.getElementById('call-details-display');
+        callDetailsDisplay.innerHTML = '';
+        
+        const callFields = ['Interaction Date', 'Customer BAN', 'FLP Conversation ID', 'Listening Type', 'Duration (minutes)'];
+        callFields.forEach(field => {
+            if (formData[field]) {
+                const item = document.createElement('div');
+                item.className = 'flex flex-col space-y-1';
+                let displayValue = formData[field];
+                if (field === 'Duration (minutes)') {
+                    displayValue = `${formData[field]} minutes`;
+                }
+                item.innerHTML = `
+                    <span class="font-medium text-gray-600">${field.replace(' (minutes)', '')}:</span>
+                    <span class="text-gray-800 pl-2">${displayValue}</span>
+                `;
+                callDetailsDisplay.appendChild(item);
+            }
+        });
+        
+        // Set record ID
+        document.getElementById('record-id-display').textContent = recordId;
+        
+        // Setup copy functionality
+        setupCopyFunctionality(recordId);
+        
+        // Setup close functionality
+        document.getElementById('close-success-modal').onclick = () => {
+            hideSuccessModal();
+            // Don't clear form automatically for updates - let the timeout handle mode switch
+        };
+        
+        // Show modal with animation
+        overlay.classList.remove('hidden');
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 10);
+    }
+    
+    function hideSuccessModal() {
+        const overlay = document.getElementById('success-overlay');
+        const modal = document.getElementById('success-modal');
+        
+        modal.classList.remove('show');
+        setTimeout(() => {
+            overlay.classList.add('hidden');
+            
+            // Reset the header back to default for next use
+            const headerDiv = modal.querySelector('.text-center.mb-6');
+            headerDiv.innerHTML = `
+                <div class="celebration-icon w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg class="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Evaluation Submitted Successfully!</h2>
+                <p class="text-gray-600">Your quality assessment has been recorded and saved.</p>
+            `;
+        }, 400);
+    }
+    
+    function setupCopyFunctionality(recordId) {
+        const copyButton = document.getElementById('copy-record-id');
+        
+        copyButton.onclick = async () => {
+            try {
+                await navigator.clipboard.writeText(recordId);
+                
+                // Visual feedback
+                const originalContent = copyButton.innerHTML;
+                copyButton.classList.add('copied');
+                copyButton.innerHTML = `
+                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                    Copied!
+                `;
+                
+                setTimeout(() => {
+                    copyButton.classList.remove('copied');
+                    copyButton.innerHTML = originalContent;
+                }, 2000);
+                
+            } catch (err) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = recordId;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                // Show feedback
+                showMessage('Record ID copied to clipboard!', true);
+            }
+        };
+    }
+    
+    function clearForm() {
+        document.getElementById('qa-form').reset();
+        setDefaultEstDate();
+        showMessage('Form has been cleared and is ready for the next evaluation.', true);
+    }
+
+    // --- ENHANCED CLEAR FORM FUNCTIONALITY ---
+    function clearFormCompletely() {
+        const form = document.getElementById('qa-form');
+        if (!form) return;
+
+        // Store the current Interaction Date value to preserve it
+        const interactionDateInput = document.querySelector('input[name="Interaction Date"]');
+        const currentInteractionDate = interactionDateInput ? interactionDateInput.value : '';
+
+        // Clear all input fields (except Interaction Date)
+        const inputs = form.querySelectorAll('input[type="text"], input[type="number"], input[type="date"]');
+        inputs.forEach(input => {
+            if (input.name !== "Interaction Date") {
+                input.value = '';
+            }
+        });
+
+        // Clear all textareas
+        const textareas = form.querySelectorAll('textarea');
+        textareas.forEach(textarea => {
+            textarea.value = '';
+        });
+
+        // Uncheck all radio buttons
+        const radios = form.querySelectorAll('input[type="radio"]');
+        radios.forEach(radio => {
+            radio.checked = false;
+        });
+
+        // Uncheck all checkboxes (Critical Behaviors section)
+        const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = false;
+            // If this is the "Other" checkbox, also disable and clear its text field
+            if (checkbox.name === "Other") {
+                const textField = document.querySelector('input[name="CB_Other_Behavior_Text"]');
+                if (textField) {
+                    textField.disabled = true;
+                    textField.value = '';
+                }
+            }
+        });
+
+        // Reset all dropdowns to their "Select..." placeholder state
+        const selects = form.querySelectorAll('select');
+        selects.forEach(select => {
+            // Reset to the first option (which should be the "Select..." placeholder)
+            select.selectedIndex = 0;
+            
+            // For cascading dropdowns, also disable dependent dropdowns
+            if (select.name === "Call Driver Level 1") {
+                const level2Dropdown = document.querySelector('select[name="Call Driver Level 2"]');
+                if (level2Dropdown) {
+                    level2Dropdown.innerHTML = '';
+                    // Add default option
+                    const defaultOption = document.createElement('option');
+                    defaultOption.textContent = 'Select...';
+                    defaultOption.value = '';
+                    defaultOption.disabled = true;
+                    defaultOption.selected = true;
+                    level2Dropdown.appendChild(defaultOption);
+                    level2Dropdown.disabled = true;
+                }
+            }
+        });
+
+        // Restore the Interaction Date if it was set
+        if (currentInteractionDate && interactionDateInput) {
+            interactionDateInput.value = currentInteractionDate;
+        } else {
+            // If no date was set, set the default EST date
+            setDefaultEstDate();
+        }
+
+        // Clear any error panels that might be showing
+        hideErrorPanel();
+
+        // IMPORTANT: Clear the saved draft from localStorage
+        clearSavedDraft();
+        console.log('Form cleared completely (including saved draft) while preserving Interaction Date');
+        
+        // Update progress bar
+        updateFormProgress();
+    }
+
+    // Update validateMandatoryFields to return errors array
+    function validateMandatoryFields() {
+        const errors = [];
+        
+        // Validate Team Member Details section (all fields must be filled)
+        const teamMemberFields = [
+            "Sap ID", "Team Member", "Team Leader", "Operations Manager", "Line of Business"
+        ];
+        
+        teamMemberFields.forEach(fieldName => {
+            const input = document.querySelector(`input[name="${fieldName}"]`);
+            if (input && !input.value.trim()) {
+                errors.push(`Team Member Details: "${fieldName}" must be filled`);
+            }
+        });
+        
+        // Validate Call Details section (all fields must be filled)
+        const callDetailsFields = [
+            { name: "Interaction Date", type: "input" },
+            { name: "Customer's BAN", type: "input" },
+            { name: "FLP Conversation ID", type: "input" },
+            { name: "Listening Type", type: "dropdown" },
+            { name: "Duration (minutes)", type: "input" }
+        ];
+        
+        callDetailsFields.forEach(field => {
+            if (field.type === "dropdown") {
+                const dropdown = document.querySelector(`select[name="${field.name}"]`);
+                if (dropdown && !dropdown.value) {
+                    errors.push(`Call Details: "${field.name}" must be selected`);
+                }
+            } else {
+                const input = document.querySelector(`input[name="${field.name}"]`);
+                if (input && !input.value.trim()) {
+                    errors.push(`Call Details: "${field.name}" must be filled`);
+                }
+            }
+        });
+        
+        // Validate Customer Experience Blueprint section (all radio buttons must be selected)
+        const cebRadioGroups = [
+            // Core skills
+            "Willingness to Help", "Warm and Energetic Greeting that Connects with the Customer", "Listen & Retain",
+            // Critical skills  
+            "Secure the Customer's Identity Based on Department Guidelines", "Probe Using a Combination of Open-ended and Closed-ended Questions", 
+            "Investigate & Check All Applicable Resources", "Offer Solutions / Explanations / Options", 
+            "Begin Processing Transaction, Adding Notes and Updating Account Information when Appropriate",
+            // Basic skills
+            "Confirm What You Know and Paraphrase Customer", "Check for Understanding", 
+            "Lead with a Benefit Prior to Asking Questions and Securing the Account", "Summarize Solution", 
+            "End on a High Note with a Personalized Close", "Reinforce the Extras You Did",
+            // Intermediate skills
+            "Early Bridge to Value When Appropriate", "Later Bridge to Value when Appropriate / Value Proposition", 
+            "Lead Customer to Accept an Option or Solution", "Check for Satisfaction",
+            // Advanced skills
+            "Overcome Objections if Necessary", "Acknowledge (Empathy When Needed)",
+            // Sales skills
+            "Learn from Your Customer", "Handling Early Objections", "Customer Intimacy", "Value Proposition"
+        ];
+        
+        cebRadioGroups.forEach(fieldName => {
+            const radios = document.querySelectorAll(`input[name="${fieldName}"]`);
+            const isSelected = Array.from(radios).some(radio => radio.checked);
+            if (!isSelected) {
+                errors.push(`Customer Experience Blueprint: "${fieldName}" must be selected`);
+            }
+        });
+        
+        // Validate Customer Experience Blueprint dropdown
+        const bridgingDropdown = document.querySelector('select[name="What type of bridging was provided?"]');
+        if (bridgingDropdown && !bridgingDropdown.value) {
+            errors.push('Customer Experience Blueprint: "What type of bridging was provided?" must be selected');
+        }
+        
+        // Validate Call Evaluation Details section (all fields must be filled)
+        const callEvalFields = [
+            { name: "Call Driver Level 1", type: "dropdown" },
+            { name: "Call Driver Level 2", type: "dropdown" },
+            { name: "Call Summary", type: "textarea" },
+            { name: "Highlights", type: "textarea" },
+            { name: "Lowlights/Recommendation", type: "textarea" }
+        ];
+        
+        callEvalFields.forEach(field => {
+            if (field.type === "dropdown") {
+                const dropdown = document.querySelector(`select[name="${field.name}"]`);
+                if (dropdown && !dropdown.value) {
+                    errors.push(`Call Evaluation Details: "${field.name}" must be selected`);
+                }
+            } else if (field.type === "textarea") {
+                const textarea = document.querySelector(`textarea[name="${field.name}"]`);
+                if (textarea && !textarea.value.trim()) {
+                    errors.push(`Call Evaluation Details: "${field.name}" must be filled`);
+                }
+            }
+        });
+        
+        if (errors.length > 0) {
+            return {
+                isValid: false,
+                errors: errors,
+                message: `Please complete the following mandatory fields:\n\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? `\n\n...and ${errors.length - 5} more fields` : ''}`
+            };
+        }
+        
+        return { isValid: true };
+    }
+
+    // --- 8. TEST DATA FUNCTIONALITY ---
+    function fillFormWithTestData() {
+        // Team Member Details
+        document.querySelector('input[name="Sap ID"]').value = '12345';
+        document.querySelector('input[name="Team Member"]').value = 'John Doe';
+        document.querySelector('input[name="Team Leader"]').value = 'Jane Smith';
+        document.querySelector('input[name="Operations Manager"]').value = 'Peter Jones';
+        document.querySelector('input[name="Line of Business"]').value = 'Customer Service';
+        
+        // Call Details
+        document.querySelector('input[name="Customer\'s BAN"]').value = '987654321';
+        document.querySelector('input[name="FLP Conversation ID"]').value = 'FLP-2024-001234';
+        
+        // Set Listening Type dropdown
+        const listeningTypeDropdown = document.querySelector('select[name="Listening Type"]');
+        if (listeningTypeDropdown && listeningTypeDropdown.options.length > 1) {
+            listeningTypeDropdown.selectedIndex = 1; // Select first non-default option
+        }
+        
+        document.querySelector('input[name="Duration (minutes)"]').value = '15';
+        
+        // Customer Experience Blueprint - Core Skills
+        setRadioValue("Willingness to Help", "DW");
+        setRadioValue("Warm and Energetic Greeting that Connects with the Customer", "DW");
+        setRadioValue("Listen & Retain", "Prt");
+        
+        // Customer Experience Blueprint - Critical Skills
+        setRadioValue("Secure the Customer's Identity Based on Department Guidelines", "DW");
+        setRadioValue("Probe Using a Combination of Open-ended and Closed-ended Questions", "DW");
+        setRadioValue("Investigate & Check All Applicable Resources", "DW");
+        setRadioValue("Offer Solutions / Explanations / Options", "DW");
+        setRadioValue("Begin Processing Transaction, Adding Notes and Updating Account Information when Appropriate", "DW");
+        
+        // Customer Experience Blueprint - Basic Skills
+        setRadioValue("Confirm What You Know and Paraphrase Customer", "DW");
+        setRadioValue("Check for Understanding", "Prt");
+        setRadioValue("Lead with a Benefit Prior to Asking Questions and Securing the Account", "DW");
+        setRadioValue("Summarize Solution", "DW");
+        setRadioValue("End on a High Note with a Personalized Close", "DW");
+        setRadioValue("Reinforce the Extras You Did", "DD");
+        
+        // Customer Experience Blueprint - Intermediate Skills
+        setRadioValue("Early Bridge to Value When Appropriate", "DW");
+        setRadioValue("Later Bridge to Value when Appropriate / Value Proposition", "DW");
+        setRadioValue("Lead Customer to Accept an Option or Solution", "Prt");
+        setRadioValue("Check for Satisfaction", "DW");
+        
+        // Customer Experience Blueprint - Advanced Skills
+        setRadioValue("Overcome Objections if Necessary", "NA");
+        setRadioValue("Acknowledge (Empathy When Needed)", "DW");
+        
+        // Customer Experience Blueprint - Sales Skills
+        setRadioValue("Learn from Your Customer", "DW");
+        setRadioValue("Handling Early Objections", "NA");
+        setRadioValue("Customer Intimacy", "Prt");
+        setRadioValue("Value Proposition", "DW");
+        
+        // Set Bridging Type dropdown
+        const bridgingDropdown = document.querySelector('select[name="What type of bridging was provided?"]');
+        if (bridgingDropdown && bridgingDropdown.options.length > 1) {
+            bridgingDropdown.selectedIndex = 2; // Select "Closed (Specific offer towards a product)" or similar
+        }
+        
+        // Customer Loyalty & Support (CLS) - Optional fields
+        const cancellationDropdown = document.querySelector('select[name="Cancellation Root Cause"]');
+        if (cancellationDropdown && cancellationDropdown.options.length > 1) {
+            cancellationDropdown.selectedIndex = 1; // Select first option
+        }
+        
+        const unethicalCreditDropdown = document.querySelector('select[name="Was there an unethical credit?"]');
+        if (unethicalCreditDropdown && unethicalCreditDropdown.options.length > 1) {
+            unethicalCreditDropdown.selectedIndex = 1; // Select "No"
+        }
+        
+        // CLS Skills Evaluation - Optional fields
+        setRadioValue("Right size", "Yes");
+        setRadioValue("Use a tiered approach", "No");
+        setRadioValue("Sufficient probing (+3 Questions)", "Yes");
+        setRadioValue("Speak to value (WHY TELUS, reality check and service superiority)", "Yes");
+        setRadioValue("Loyalty statements implementation", "No");
+        setRadioValue("Investigation (Review bill, compare competitor offer, search notes on the account, take a look at usage)", "Yes");
+        setRadioValue("Was the agent able to retain the customer?", "Yes");
+        
+        // Call Driver Level 1 - Set and trigger cascading
+        const callDriverLevel1 = document.querySelector('select[name="Call Driver Level 1"]');
+        if (callDriverLevel1 && callDriverLevel1.options.length > 1) {
+            callDriverLevel1.selectedIndex = 1; // Select first available option
+            callDriverLevel1.dispatchEvent(new Event('change')); // Trigger cascading
+            
+            // Wait for cascading to complete, then set Level 2
+            setTimeout(() => {
+                const callDriverLevel2 = document.querySelector('select[name="Call Driver Level 2"]');
+                if (callDriverLevel2 && callDriverLevel2.options.length > 1) {
+                    callDriverLevel2.selectedIndex = 1; // Select first available option
+                }
+            }, 100);
+        }
+        
+        // Call Evaluation Details - Text areas
+        document.querySelector('textarea[name="Call Summary"]').value = 
+            "Customer contacted TELUS regarding billing inquiry about unexpected charges on their account. TM greeted the customer warmly and verified their identity using PIN authentication. After thorough investigation, TM discovered the charges were related to a premium service add-on that was activated during the previous month. TM explained the charges clearly and offered to remove the service if not needed. Customer appreciated the explanation and decided to keep the service after understanding its benefits. TM processed the account notes and confirmed customer satisfaction before ending the call on a positive note.";
+        
+        document.querySelector('textarea[name="Highlights"]').value = 
+            "- TM demonstrated excellent probing skills by asking targeted questions to identify the root cause of billing concerns\n- TM effectively bridged to value by explaining the benefits of the premium service, resulting in customer retention\n- TM showed strong customer retention skills by turning a complaint into a positive experience through clear communication";
+        
+        document.querySelector('textarea[name="Lowlights/Recommendation"]').value = 
+            "- TM could improve by proactively explaining billing cycles at the beginning to reduce repeat calls about similar inquiries\n- Consider implementing early value bridging when discussing account changes to identify additional revenue opportunities\n- TM should reinforce the extras provided (detailed explanation, account notes) to enhance customer perception of service quality";
+        
+        showMessage('Form filled with comprehensive test data for evaluation testing.', true);
+    }
+    
+    function setRadioValue(fieldName, value) {
+        const radio = document.querySelector(`input[name="${fieldName}"][value="${value}"]`);
+        if (radio) {
+            radio.checked = true;
+        }
+    }
+
+    // --- ADMIN STATUS CHECK ---
+    function checkAdminStatus() {
+        console.log("Checking admin status...");
+        
+        google.script.run
+            .withSuccessHandler(handleAdminStatusResult)
+            .withFailureHandler(handleAdminStatusError)
+            .isAdminUser();
+    }
+    
+    function handleAdminStatusResult(isAdmin) {
+        console.log("Admin status result:", isAdmin);
+        
+        // Find admin-only buttons by text content
+        const allButtons = document.querySelectorAll('button');
+        let fillTestButton = null;
+        let debugButton = null;
+        
+        allButtons.forEach(button => {
+            if (button.textContent.trim() === 'Fill Test Data') {
+                fillTestButton = button;
+            } else if (button.textContent.trim() === 'Debug Data') {
+                debugButton = button;
+            }
+        });
+        
+        console.log("Found Fill Test Data button:", fillTestButton);
+        console.log("Found Debug Data button:", debugButton);
+        
+        // Show/hide ONLY the admin-only buttons (Fill Test Data and Debug Data)
+        // All other buttons (Process Script, Clear Form, FueliX features) remain visible to everyone
+        if (fillTestButton) {
+            if (isAdmin) {
+                fillTestButton.style.display = 'inline-flex';
+                fillTestButton.style.visibility = 'visible';
+                console.log("Showing Fill Test Data button for admin user");
+            } else {
+                fillTestButton.style.display = 'none';
+                fillTestButton.style.visibility = 'hidden';
+                console.log("Hiding Fill Test Data button for non-admin user");
+            }
+        }
+        
+        if (debugButton) {
+            if (isAdmin) {
+                debugButton.style.display = 'inline-flex';
+                debugButton.style.visibility = 'visible';
+                console.log("Showing Debug Data button for admin user");
+            } else {
+                debugButton.style.display = 'none';
+                debugButton.style.visibility = 'hidden';
+                console.log("Hiding Debug Data button for non-admin user");
+            }
+        }
+        
+        // Log final status
+        if (isAdmin) {
+            console.log("Admin user detected - all buttons accessible including Fill Test Data and Debug Data");
+        } else {
+            console.log("Regular user detected - Fill Test Data and Debug Data hidden, all other features available");
+        }
+    }
+    
+    function handleAdminStatusError(error) {
+        console.error("Error checking admin status:", error);
+        // Default to non-admin if there's an error
+        handleAdminStatusResult(false);
+    }
+
+    // --- DEBUG FUNCTIONALITY ---
+    function debugSpreadsheetInfo() {
+        showMessage('Checking spreadsheet data...', true);
+        
+        google.script.run
+            .withSuccessHandler(displayDebugInfo)
+            .withFailureHandler(handleDebugError)
+            .debugSpreadsheetData();
+    }
+    
+    function displayDebugInfo(debugData) {
+        console.log('Debug data:', debugData);
+        
+        let message = '';
+        if (debugData.error) {
+            message = `Error: ${debugData.error}`;
+            if (debugData.availableSheets) {
+                message += `\nAvailable sheets: ${debugData.availableSheets.join(', ')}`;
+            }
+        } else {
+            message = `Spreadsheet Status:
+- Sheet exists: ${debugData.sheetExists}
+- Total rows: ${debugData.totalRows}
+- Total columns: ${debugData.totalColumns}
+- RecordID column exists: ${debugData.recordIdColumnExists}
+- Has data: ${debugData.hasData}`;
+            
+            if (debugData.sampleRecordIds && debugData.sampleRecordIds.length > 0) {
+                message += `\nSample Record IDs: ${debugData.sampleRecordIds.join(', ')}`;
+            } else {
+                message += '\nNo Record IDs found in data';
+            }
+        }
+        
+        alert(message);
+        showMessage('Debug info displayed in alert. Check console for full details.', true);
+    }
+    
+    function handleDebugError(error) {
+        console.error('Debug error:', error);
+        showMessage(`Debug failed: ${error.message}`, false);
+    }
+
+    // --- SAVE DRAFT SYSTEM FUNCTIONS ---
+
+    // Save draft to localStorage
+    function saveDraftToLocalStorage() {
+        if (currentMode === 'edit') {
+            console.log('Draft save skipped - in edit mode');
+            return false;
+        }
+        
+        try {
+            const formData = getFormState();
+            console.log('=== SAVE DRAFT DEBUG ===');
+            console.log('Form data to save:', formData);
+            console.log('Form data keys:', Object.keys(formData));
+            console.log('Form data entries count:', Object.keys(formData).length);
+            
+            const draftData = {
+                formData: formData,
+                timestamp: new Date().toISOString(),
+                sapId: formData['Sap ID'] || 'Unknown',
+                teamMember: formData['Team Member'] || 'No Team Member Selected'
+            };
+            
+            localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftData));
+            console.log('Draft saved successfully to localStorage');
+            console.log('=== SAVE DRAFT DEBUG END ===');
+            return true;
+        } catch (error) {
+            console.error('Error saving draft:', error);
+            return false;
+        }
+    }
+
+    // Load draft from localStorage
+    function loadDraftFromLocalStorage() {
+        try {
+            const savedDraft = localStorage.getItem(DRAFT_STORAGE_KEY);
+            if (!savedDraft) return null;
+            return JSON.parse(savedDraft);
+        } catch (error) {
+            console.error('Error loading draft:', error);
+            return null;
+        }
+    }
+
+    // Clear saved draft
+    function clearSavedDraft() {
+        try {
+            localStorage.removeItem(DRAFT_STORAGE_KEY);
+            return true;
+        } catch (error) {
+            console.error('Error clearing draft:', error);
+            return false;
+        }
+    }
+
+    // Check if form has meaningful data (not just default Interaction Date)
+    function formHasMeaningfulData() {
+        const formData = getFormState();
+        
+        console.log('=== CHECK MEANINGFUL DATA ===');
+        console.log('Form data:', formData);
+        console.log('Form data keys:', Object.keys(formData));
+        
+        // Check if any field other than Interaction Date has a value
+        const hasMeaningful = Object.keys(formData).some(key => {
+            // Skip Interaction Date as it's auto-filled
+            if (key === 'Interaction Date') return false;
+            
+            const value = formData[key];
+            const hasValue = value && value !== '' && value !== false;
+            
+            if (hasValue) {
+                console.log(`Found meaningful data in "${key}":`, value);
+            }
+            
+            return hasValue;
+        });
+        
+        console.log('Has meaningful data:', hasMeaningful);
+        console.log('=== CHECK MEANINGFUL DATA END ===');
+        
+        return hasMeaningful;
+    }
+
+    // Debounced auto-save
+    function debouncedAutoSave() {
+        if (currentMode === 'edit') {
+            updateAutoSaveStatus('disabled');
+            return;
+        }
+        
+        if (autoSaveTimeout) {
+            clearTimeout(autoSaveTimeout);
+        }
+        
+        autoSaveTimeout = setTimeout(() => {
+            if (!isLoadingFromDraft && !isUpdatingFromHistory) {
+                // Only save if form has meaningful data
+                if (formHasMeaningfulData()) {
+                    updateAutoSaveStatus('saving');
+                    const saved = saveDraftToLocalStorage();
+                    if (saved) {
+                        updateAutoSaveStatus('saved');
+                        console.log('Draft auto-saved with meaningful data');
+                    }
+                } else {
+                    // Clear any existing draft if form only has default data
+                    clearSavedDraft();
+                    updateAutoSaveStatus('ready');
+                    console.log('Draft cleared - only default data present');
+                }
+            }
+        }, 2000);
+    }
+
+    // Update auto-save status
+    function updateAutoSaveStatus(status, timestamp = null) {
+        const statusText = document.getElementById('save-status-text');
+        const saveIcon = document.getElementById('save-icon');
+        
+        if (!statusText || !saveIcon) return;
+        
+        if (currentMode === 'edit') {
+            statusText.textContent = 'Auto-save disabled (Edit Mode)';
+            return;
+        }
+        
+        switch(status) {
+            case 'saving':
+                statusText.textContent = 'Saving...';
+                break;
+            case 'saved':
+                const time = timestamp || new Date().toLocaleTimeString();
+                statusText.textContent = `Draft saved at ${time}`;
+                break;
+            case 'ready':
+                statusText.textContent = 'Ready';
+                break;
+            case 'disabled':
+                statusText.textContent = 'Auto-save disabled (Edit Mode)';
+                break;
+        }
+    }
+
+    // Handle manual save draft button click
+    function handleSaveDraft() {
+        if (currentMode === 'edit') {
+            showMessage('Auto-save is disabled in edit mode', false);
+            return;
+        }
+        
+        const saved = saveDraftToLocalStorage();
+        if (saved) {
+            const now = new Date().toLocaleTimeString();
+            updateAutoSaveStatus('saved', now);
+            showToast(`Draft saved at ${now}`);
+        } else {
+            showMessage('Failed to save draft', false);
+        }
+    }
+
+    // Check for saved draft on page load
+    function checkForSavedDraft() {
+        const savedDraft = loadDraftFromLocalStorage();
+        
+        console.log('=== CHECK FOR SAVED DRAFT ===');
+        console.log('Saved draft exists:', !!savedDraft);
+        
+        if (!savedDraft || !savedDraft.formData) {
+            console.log('No saved draft found');
+            return;
+        }
+        
+        console.log('Draft data:', savedDraft.formData);
+        console.log('Draft keys:', Object.keys(savedDraft.formData));
+        
+        // Check if draft has meaningful data (not just the default Interaction Date)
+        const formData = savedDraft.formData;
+        const hasRealData = Object.keys(formData).some(key => {
+            // Ignore Interaction Date as it's auto-filled
+            if (key === 'Interaction Date') return false;
+            
+            const value = formData[key];
+            const hasValue = value && value !== '' && value !== false;
+            
+            if (hasValue) {
+                console.log(`Found meaningful data in field "${key}":`, value);
+            }
+            
+            return hasValue;
+        });
+        
+        console.log('Has real data:', hasRealData);
+        
+        // Only prompt to reload if there's actual user data
+        if (!hasRealData) {
+            console.log('Draft only contains default data, auto-clearing');
+            clearSavedDraft();
+            return;
+        }
+        
+        const savedTime = new Date(savedDraft.timestamp).toLocaleString();
+        const message = `Found a saved draft from ${savedTime}\nSAP ID: ${savedDraft.sapId}\nTeam Member: ${savedDraft.teamMember}\n\nWould you like to load it?`;
+        
+        if (confirm(message)) {
+            console.log('User chose to load draft');
+            isLoadingFromDraft = true;
+            
+            // Wait for form to be fully rendered before setting state
+            const waitForForm = setInterval(() => {
+                const sapIdField = document.querySelector('input[name="Sap ID"]');
+                if (sapIdField) {
+                    clearInterval(waitForForm);
+                    console.log('Form is ready, loading draft data...');
+                    setFormState(savedDraft.formData);
+                    setTimeout(() => {
+                        isLoadingFromDraft = false;
+                        updateAutoSaveStatus('ready');
+                        showToast('Draft loaded successfully');
+                        document.getElementById('form-progress-container').classList.remove('hidden');
+                        updateFormProgress();
+                    }, 500);
+                }
+            }, 100);
+            
+            // Timeout after 5 seconds if form never loads
+            setTimeout(() => {
+                clearInterval(waitForForm);
+                if (isLoadingFromDraft) {
+                    isLoadingFromDraft = false;
+                    showMessage('Failed to load draft - form not ready', false);
+                }
+            }, 5000);
+        } else {
+            console.log('User declined to load draft, clearing');
+            clearSavedDraft();
+        }
+    }
+
+    // Update form progress
+    function updateFormProgress() {
+        console.log('=== UPDATE FORM PROGRESS CALLED ===');
+        
+        const mandatoryFields = [
+            'Sap ID', 'Team Member', 'Team Leader', 'Operations Manager', 'Line of Business',
+            'Interaction Date', "Customer's BAN", 'FLP Conversation ID', 'Listening Type', 'Duration (minutes)',
+            'Willingness to Help', 'Warm and Energetic Greeting that Connects with the Customer', 'Listen & Retain',
+            "Secure the Customer's Identity Based on Department Guidelines", 'Probe Using a Combination of Open-ended and Closed-ended Questions',
+            'Investigate & Check All Applicable Resources', 'Offer Solutions / Explanations / Options',
+            'Begin Processing Transaction, Adding Notes and Updating Account Information when Appropriate',
+            'Confirm What You Know and Paraphrase Customer', 'Check for Understanding',
+            'Lead with a Benefit Prior to Asking Questions and Securing the Account', 'Summarize Solution',
+            'End on a High Note with a Personalized Close', 'Reinforce the Extras You Did',
+            'Early Bridge to Value When Appropriate', 'Later Bridge to Value when Appropriate / Value Proposition',
+            'Lead Customer to Accept an Option or Solution', 'Check for Satisfaction',
+            'Overcome Objections if Necessary', 'Acknowledge (Empathy When Needed)',
+            'Learn from Your Customer', 'Handling Early Objections', 'Customer Intimacy', 'Value Proposition',
+            'What type of bridging was provided?',
+            'Call Driver Level 1', 'Call Driver Level 2', 'Call Summary', 'Highlights', 'Lowlights/Recommendation'
+        ];
+        
+        console.log('Total mandatory fields:', mandatoryFields.length);
+        
+        let completedCount = 0;
+        
+        mandatoryFields.forEach(fieldName => {
+            // Try to find the field with the exact name first
+            let element = document.querySelector(`input[name="${fieldName}"], select[name="${fieldName}"], textarea[name="${fieldName}"]`);
+            
+            // If not found and it's a radio button field, check for checked radios
+            if (!element) {
+                const radio = document.querySelector(`input[name="${fieldName}"]:checked`);
+                if (radio) {
+                    completedCount++;
+                    return;
+                }
+            }
+            
+            // For input/select/textarea fields
+            if (element) {
+                if (element.type === 'radio') {
+                    // For radio buttons, check if any is selected
+                    const checked = document.querySelector(`input[name="${fieldName}"]:checked`);
+                    if (checked) {
+                        completedCount++;
+                    }
+                } else if (element.value && element.value.trim()) {
+                    completedCount++;
+                }
+            }
+        });
+        
+        const totalFields = mandatoryFields.length;
+        const percentage = Math.round((completedCount / totalFields) * 100);
+        
+        console.log('Completed fields:', completedCount);
+        console.log('Percentage:', percentage + '%');
+        
+        const progressPercentage = document.getElementById('progress-percentage');
+        const progressBar = document.getElementById('progress-bar');
+        const progressCount = document.getElementById('progress-count');
+        
+        console.log('Progress elements found:', {
+            progressPercentage: !!progressPercentage,
+            progressBar: !!progressBar,
+            progressCount: !!progressCount
+        });
+        
+        if (progressPercentage) {
+            progressPercentage.textContent = `${percentage}%`;
+            console.log('Updated percentage text to:', percentage + '%');
+        }
+        if (progressBar) {
+            progressBar.style.width = `${percentage}%`;
+            console.log('Updated progress bar width to:', percentage + '%');
+        }
+        if (progressCount) {
+            progressCount.textContent = `(${completedCount}/${totalFields})`;
+            console.log('Updated count to:', `(${completedCount}/${totalFields})`);
+        }
+        
+        if (progressBar) {
+            if (percentage < 34) {
+                progressBar.className = 'bg-red-600 h-1.5 rounded-full transition-all duration-300';
+            } else if (percentage < 67) {
+                progressBar.className = 'bg-yellow-500 h-1.5 rounded-full transition-all duration-300';
+            } else {
+                progressBar.className = 'bg-indigo-600 h-1.5 rounded-full transition-all duration-300';
+            }
+        }
+    }
+
+    // Show toast notification
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification animate-fade-in';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.classList.remove('animate-fade-in');
+            toast.classList.add('animate-fade-out');
+            setTimeout(() => toast.remove(), 300);
+        }, 2000);
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+        const modifier = isMac ? e.metaKey : e.ctrlKey;
+        
+        if (!modifier) return;
+        
+        if (e.key === 's' || e.key === 'S') {
+            e.preventDefault();
+            handleSaveDraft();
+            return;
+        }
+        
+        if (e.key === 'z' || e.key === 'Z') {
+            if (!e.shiftKey) {
+                e.preventDefault();
+                undo();
+                return;
+            }
+            e.preventDefault();
+            redo();
+            return;
+        }
+        
+        if (e.key === 'y' || e.key === 'Y') {
+            e.preventDefault();
+            redo();
+            return;
+        }
+    });
+
+    // Confirmation before leaving page
+    window.addEventListener('beforeunload', (e) => {
+        if (currentMode === 'edit') return;
+        
+        const currentState = getFormState();
+        const hasContent = Object.values(currentState).some(value => value && value !== '');
+        
+        if (hasContent) {
+            e.preventDefault();
+            e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        }
+    });
+
+    // --- 9. RESIZE FUNCTIONALITY ---
+    function initializeResizeFunctionality() {
+        const resizeHandle = document.getElementById('resize-handle');
+        const analysisResults = document.getElementById('analysis-results');
+        
+        if (!resizeHandle || !analysisResults) return;
+
+        let isResizing = false;
+        let startY = 0;
+        let startHeight = 0;
+
+        // Mouse events
+        resizeHandle.addEventListener('mousedown', startResize);
+        document.addEventListener('mousemove', doResize);
+        document.addEventListener('mouseup', stopResize);
+
+        // Touch events for mobile support
+        resizeHandle.addEventListener('touchstart', startResize, { passive: false });
+        document.addEventListener('touchmove', doResize, { passive: false });
+        document.addEventListener('touchend', stopResize);
+
+        function startResize(e) {
+            e.preventDefault();
+            isResizing = true;
+            
+            const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+            startY = clientY;
+            startHeight = parseInt(document.defaultView.getComputedStyle(analysisResults).height, 10);
+            
+            // Change cursor for the entire document while resizing
+            document.body.style.cursor = 'ns-resize';
+            document.body.style.userSelect = 'none';
+        }
+
+        function doResize(e) {
+            if (!isResizing) return;
+            
+            e.preventDefault();
+            
+            const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+            const deltaY = clientY - startY;
+            const newHeight = startHeight + deltaY;
+            
+            // Set minimum and maximum height constraints
+            const minHeight = 80; // Minimum height in pixels
+            const maxHeight = 600; // Maximum height in pixels
+            
+            if (newHeight >= minHeight && newHeight <= maxHeight) {
+                analysisResults.style.height = newHeight + 'px';
+            }
+        }
+
+        function stopResize() {
+            if (!isResizing) return;
+            
+            isResizing = false;
+            
+            // Reset cursor and user selection
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        }
+    }
+
+  </script>
+</body>
+</html>
