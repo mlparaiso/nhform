@@ -963,6 +963,7 @@ function debugRosterSheet() {
 /**
  * Fetches team member details from the roster sheet based on SAP ID.
  * INTERNAL FUNCTION - Use getCachedTeamMemberDetails() instead
+ * OPTIMIZED VERSION - Uses batch processing and early exit
  * @param {string} sapId - SAP ID to lookup
  * @returns {Object|null} Team member details or null
  */
@@ -973,7 +974,8 @@ function fetchTeamMemberDetailsFromSheet(sapId) {
   }
   
   try {
-    Logger.log(`=== ROSTER LOOKUP DEBUG START ===`);
+    const startTime = new Date().getTime();
+    Logger.log(`=== OPTIMIZED ROSTER LOOKUP START ===`);
     Logger.log(`Looking up SAP ID: "${sapId}"`);
     
     const ss = SpreadsheetApp.openById(ROSTER_SPREADSHEET_ID);
@@ -984,66 +986,60 @@ function fetchTeamMemberDetailsFromSheet(sapId) {
       throw new Error(`Roster sheet "${ROSTER_SHEET_NAME}" not found.`); 
     }
     
-    const data = sheet.getDataRange().getValues();
-    const headers = data[0]; // Get headers from first row
-    const dataRows = data.slice(1); // Remove header row
-    
-    Logger.log(`Roster sheet has ${dataRows.length} data rows and ${headers.length} columns`);
-    Logger.log(`Headers: ${headers.join(', ')}`);
-    
-    // Use fixed column positions based on roster sheet structure
-    // This is more reliable than dynamic header detection
-    const sapIdIndex = 0;        // Column A: Employee ID
-    const teamMemberIndex = 2;   // Column C: Full Name
-    const teamLeaderIndex = 8;   // Column I: Direct Supervisor
-    const opsManagerIndex = 10;  // Column K: Ops Mgr
-    const lobIndex = 3;          // Column D: LOB
-    
-    Logger.log(`Column indices found:`);
-    Logger.log(`SAP ID: ${sapIdIndex} (${headers[sapIdIndex]})`);
-    Logger.log(`Team Member: ${teamMemberIndex} (${headers[teamMemberIndex]})`);
-    Logger.log(`Team Leader: ${teamLeaderIndex} (${headers[teamLeaderIndex]})`);
-    Logger.log(`Operations Manager: ${opsManagerIndex} (${headers[opsManagerIndex]})`);
-    Logger.log(`Line of Business: ${lobIndex} (${headers[lobIndex]})`);
-    
-    if (sapIdIndex === -1) {
-      Logger.log("❌ SAP ID column not found in roster sheet");
-      throw new Error("SAP ID column not found in roster sheet. Please check the roster sheet structure.");
+    // OPTIMIZATION 1: Get only the columns we need instead of entire sheet
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) {
+      Logger.log("No data rows in roster sheet");
+      return null;
     }
     
-    // Search for the SAP ID in the data
-    for (let i = 0; i < dataRows.length; i++) {
-      const row = dataRows[i];
-      const currentSapId = row[sapIdIndex];
-      
-      Logger.log(`Row ${i + 2}: SAP ID = "${currentSapId}"`);
-      
-      if (currentSapId && currentSapId.toString().trim() === sapId.toString().trim()) {
-        Logger.log(`✅ MATCH FOUND at row ${i + 2}!`);
-        
-        const result = {
-          "Sap ID": currentSapId,
-          "Team Member": teamMemberIndex !== -1 ? (row[teamMemberIndex] || '') : '',
-          "Team Leader": teamLeaderIndex !== -1 ? (row[teamLeaderIndex] || '') : '',
-          "Operations Manager": opsManagerIndex !== -1 ? (row[opsManagerIndex] || '') : '',
-          "Line of Business": lobIndex !== -1 ? (row[lobIndex] || '') : ''
-        };
-        
-        Logger.log(`Returning result:`, JSON.stringify(result, null, 2));
-        Logger.log(`=== ROSTER LOOKUP DEBUG END - SUCCESS ===`);
-        
-        return result;
-      }
+    // Fixed column positions based on roster sheet structure
+    const sapIdCol = 1;        // Column A: Employee ID
+    const teamMemberCol = 3;   // Column C: Full Name
+    const lobCol = 4;          // Column D: LOB
+    const teamLeaderCol = 9;   // Column I: Direct Supervisor
+    const opsManagerCol = 11;  // Column K: Ops Mgr
+    
+    // OPTIMIZATION 2: Use TextFinder for fast search (Google's built-in index)
+    const sapIdRange = sheet.getRange(2, sapIdCol, lastRow - 1, 1);
+    const textFinder = sapIdRange.createTextFinder(sapId.toString().trim());
+    textFinder.matchEntireCell(true);
+    textFinder.matchCase(false);
+    
+    const foundCell = textFinder.findNext();
+    
+    if (!foundCell) {
+      const searchTime = new Date().getTime() - startTime;
+      Logger.log(`❌ No match found for SAP ID: "${sapId}" (searched ${lastRow - 1} rows in ${searchTime}ms)`);
+      Logger.log(`=== OPTIMIZED ROSTER LOOKUP END - NOT FOUND ===`);
+      return null;
     }
     
-    Logger.log(`❌ No matching SAP ID found for: "${sapId}"`);
-    Logger.log(`=== ROSTER LOOKUP DEBUG END - NOT FOUND ===`);
-    return null;
+    // OPTIMIZATION 3: Get only the specific row we need
+    const foundRow = foundCell.getRow();
+    Logger.log(`✅ MATCH FOUND at row ${foundRow}!`);
+    
+    // Get all needed columns in one batch call
+    const rowData = sheet.getRange(foundRow, 1, 1, 11).getValues()[0];
+    
+    const result = {
+      "Sap ID": rowData[sapIdCol - 1] || '',
+      "Team Member": rowData[teamMemberCol - 1] || '',
+      "Team Leader": rowData[teamLeaderCol - 1] || '',
+      "Operations Manager": rowData[opsManagerCol - 1] || '',
+      "Line of Business": rowData[lobCol - 1] || ''
+    };
+    
+    const searchTime = new Date().getTime() - startTime;
+    Logger.log(`Returning result (found in ${searchTime}ms):`, JSON.stringify(result, null, 2));
+    Logger.log(`=== OPTIMIZED ROSTER LOOKUP END - SUCCESS ===`);
+    
+    return result;
     
   } catch (error) {
     Logger.log(`❌ Error in getTeamMemberDetails: ${error.message}`);
     Logger.log(`Error stack: ${error.stack}`);
-    Logger.log(`=== ROSTER LOOKUP DEBUG END - ERROR ===`);
+    Logger.log(`=== OPTIMIZED ROSTER LOOKUP END - ERROR ===`);
     throw new Error(`Could not retrieve details. Reason: ${error.message}`);
   }
 }
