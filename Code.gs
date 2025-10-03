@@ -15,6 +15,238 @@ const DROPDOWN_SHEET_NAME = "Dropdowns";
 // Enhanced data structure configuration
 const FORM_VERSION = "2.1";
 
+// --- CACHING CONFIGURATION ---
+const CACHE_KEYS = {
+  DROPDOWN_OPTIONS: 'dropdown_options',
+  FORM_STRUCTURE: 'form_structure',
+  RUBRIC_DETAILS: 'rubric_details',
+  ROSTER_PREFIX: 'roster_'
+};
+
+const CACHE_DURATIONS = {
+  DROPDOWN_OPTIONS: 3600,    // 1 hour in seconds
+  FORM_STRUCTURE: 3600,      // 1 hour in seconds
+  ROSTER_LOOKUP: 86400,      // 24 hours in seconds
+  RUBRIC_DETAILS: 0          // Permanent (stored in Properties Service)
+};
+
+// --- CACHING UTILITY FUNCTIONS ---
+
+/**
+ * Gets the appropriate cache service based on cache type
+ * @param {string} cacheType - Type of cache (script, user, or document)
+ * @returns {Cache} Cache service instance
+ */
+function getCacheService(cacheType = 'script') {
+  switch (cacheType) {
+    case 'user':
+      return CacheService.getUserCache();
+    case 'document':
+      return CacheService.getDocumentCache();
+    case 'script':
+    default:
+      return CacheService.getScriptCache();
+  }
+}
+
+/**
+ * Stores data in cache with automatic JSON serialization
+ * @param {string} key - Cache key
+ * @param {any} data - Data to cache
+ * @param {number} expirationInSeconds - Cache expiration time
+ * @param {string} cacheType - Type of cache service to use
+ * @returns {boolean} Success status
+ */
+function setCacheData(key, data, expirationInSeconds, cacheType = 'script') {
+  try {
+    const cache = getCacheService(cacheType);
+    const serializedData = JSON.stringify(data);
+    cache.put(key, serializedData, expirationInSeconds);
+    Logger.log(`✅ Cache set: ${key} (expires in ${expirationInSeconds}s)`);
+    return true;
+  } catch (error) {
+    Logger.log(`❌ Cache set failed for ${key}: ${error.message}`);
+    return false;
+  }
+}
+
+/**
+ * Retrieves data from cache with automatic JSON deserialization
+ * @param {string} key - Cache key
+ * @param {string} cacheType - Type of cache service to use
+ * @returns {any|null} Cached data or null if not found/expired
+ */
+function getCacheData(key, cacheType = 'script') {
+  try {
+    const cache = getCacheService(cacheType);
+    const serializedData = cache.get(key);
+    
+    if (serializedData) {
+      Logger.log(`✅ Cache hit: ${key}`);
+      return JSON.parse(serializedData);
+    }
+    
+    Logger.log(`⚠️ Cache miss: ${key}`);
+    return null;
+  } catch (error) {
+    Logger.log(`❌ Cache get failed for ${key}: ${error.message}`);
+    return null;
+  }
+}
+
+/**
+ * Removes specific key from cache
+ * @param {string} key - Cache key to remove
+ * @param {string} cacheType - Type of cache service to use
+ */
+function removeCacheData(key, cacheType = 'script') {
+  try {
+    const cache = getCacheService(cacheType);
+    cache.remove(key);
+    Logger.log(`✅ Cache removed: ${key}`);
+  } catch (error) {
+    Logger.log(`❌ Cache remove failed for ${key}: ${error.message}`);
+  }
+}
+
+/**
+ * Stores data in Properties Service for permanent storage
+ * @param {string} key - Property key
+ * @param {any} data - Data to store
+ * @returns {boolean} Success status
+ */
+function setPropertyData(key, data) {
+  try {
+    const properties = PropertiesService.getScriptProperties();
+    const serializedData = JSON.stringify(data);
+    properties.setProperty(key, serializedData);
+    Logger.log(`✅ Property set: ${key}`);
+    return true;
+  } catch (error) {
+    Logger.log(`❌ Property set failed for ${key}: ${error.message}`);
+    return false;
+  }
+}
+
+/**
+ * Retrieves data from Properties Service
+ * @param {string} key - Property key
+ * @returns {any|null} Stored data or null if not found
+ */
+function getPropertyData(key) {
+  try {
+    const properties = PropertiesService.getScriptProperties();
+    const serializedData = properties.getProperty(key);
+    
+    if (serializedData) {
+      Logger.log(`✅ Property hit: ${key}`);
+      return JSON.parse(serializedData);
+    }
+    
+    Logger.log(`⚠️ Property miss: ${key}`);
+    return null;
+  } catch (error) {
+    Logger.log(`❌ Property get failed for ${key}: ${error.message}`);
+    return null;
+  }
+}
+
+/**
+ * Clears all caches (Script, User, and Document)
+ * Admin function to clear all cached data
+ */
+function clearAllCaches() {
+  try {
+    Logger.log("=== CLEARING ALL CACHES ===");
+    
+    // Clear script cache
+    CacheService.getScriptCache().removeAll([
+      CACHE_KEYS.DROPDOWN_OPTIONS,
+      CACHE_KEYS.FORM_STRUCTURE
+    ]);
+    Logger.log("✅ Script cache cleared");
+    
+    // Clear user cache
+    CacheService.getUserCache().removeAll([
+      CACHE_KEYS.DROPDOWN_OPTIONS,
+      CACHE_KEYS.FORM_STRUCTURE
+    ]);
+    Logger.log("✅ User cache cleared");
+    
+    // Note: Roster cache entries are dynamic (roster_SAPID), so we can't clear them all easily
+    // They will expire naturally after 24 hours
+    
+    Logger.log("=== CACHE CLEARING COMPLETE ===");
+    
+    return {
+      success: true,
+      message: "All caches cleared successfully",
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    Logger.log(`❌ Error clearing caches: ${error.message}`);
+    return {
+      success: false,
+      message: `Failed to clear caches: ${error.message}`
+    };
+  }
+}
+
+/**
+ * Clears rubric details from Properties Service
+ * Admin function to force refresh of rubric data
+ */
+function clearRubricCache() {
+  try {
+    const properties = PropertiesService.getScriptProperties();
+    properties.deleteProperty(CACHE_KEYS.RUBRIC_DETAILS);
+    Logger.log("✅ Rubric cache cleared from Properties Service");
+    
+    return {
+      success: true,
+      message: "Rubric cache cleared successfully"
+    };
+  } catch (error) {
+    Logger.log(`❌ Error clearing rubric cache: ${error.message}`);
+    return {
+      success: false,
+      message: `Failed to clear rubric cache: ${error.message}`
+    };
+  }
+}
+
+/**
+ * Gets cache statistics for monitoring
+ * @returns {Object} Cache statistics
+ */
+function getCacheStats() {
+  try {
+    const stats = {
+      timestamp: new Date().toISOString(),
+      caches: {
+        dropdownOptions: getCacheData(CACHE_KEYS.DROPDOWN_OPTIONS) !== null,
+        formStructure: getCacheData(CACHE_KEYS.FORM_STRUCTURE) !== null,
+        rubricDetails: getPropertyData(CACHE_KEYS.RUBRIC_DETAILS) !== null
+      },
+      configuration: {
+        dropdownCacheDuration: `${CACHE_DURATIONS.DROPDOWN_OPTIONS / 3600} hours`,
+        formStructureCacheDuration: `${CACHE_DURATIONS.FORM_STRUCTURE / 3600} hours`,
+        rosterCacheDuration: `${CACHE_DURATIONS.ROSTER_LOOKUP / 3600} hours`,
+        rubricStorage: 'Properties Service (permanent)'
+      }
+    };
+    
+    Logger.log(`Cache stats: ${JSON.stringify(stats, null, 2)}`);
+    return stats;
+  } catch (error) {
+    Logger.log(`❌ Error getting cache stats: ${error.message}`);
+    return {
+      success: false,
+      message: `Failed to get cache stats: ${error.message}`
+    };
+  }
+}
+
 // --- ENHANCED DATA STRUCTURE FUNCTIONS ---
 
 /**
@@ -439,11 +671,153 @@ function doGet(e) {
   return html;
 }
 
+// --- CACHED DATA RETRIEVAL FUNCTIONS ---
+
+/**
+ * Gets dropdown options with caching (1 hour cache)
+ * This is the main function that should be called by the application
+ * @returns {Object} Dropdown options object
+ */
+function getCachedDropdownOptions() {
+  try {
+    // Try to get from cache first
+    const cachedData = getCacheData(CACHE_KEYS.DROPDOWN_OPTIONS);
+    if (cachedData) {
+      Logger.log("📦 Using cached dropdown options");
+      return cachedData;
+    }
+    
+    // Cache miss - fetch from spreadsheet
+    Logger.log("🔄 Fetching fresh dropdown options from spreadsheet");
+    const freshData = fetchDropdownOptionsFromSheet();
+    
+    // Store in cache for 1 hour
+    setCacheData(
+      CACHE_KEYS.DROPDOWN_OPTIONS,
+      freshData,
+      CACHE_DURATIONS.DROPDOWN_OPTIONS
+    );
+    
+    return freshData;
+  } catch (error) {
+    Logger.log(`❌ Error in getCachedDropdownOptions: ${error.message}`);
+    // Fallback to direct fetch if caching fails
+    return fetchDropdownOptionsFromSheet();
+  }
+}
+
+/**
+ * Gets team member details with caching (24 hour cache per SAP ID)
+ * This is the main function that should be called by the application
+ * @param {string} sapId - SAP ID to lookup
+ * @returns {Object|null} Team member details or null
+ */
+function getCachedTeamMemberDetails(sapId) {
+  if (!sapId) {
+    Logger.log("getCachedTeamMemberDetails: No SAP ID provided");
+    return null;
+  }
+  
+  try {
+    // Create unique cache key for this SAP ID
+    const cacheKey = CACHE_KEYS.ROSTER_PREFIX + sapId;
+    
+    // Try to get from cache first
+    const cachedData = getCacheData(cacheKey);
+    if (cachedData) {
+      Logger.log(`📦 Using cached roster data for SAP ID: ${sapId}`);
+      return cachedData;
+    }
+    
+    // Cache miss - fetch from spreadsheet
+    Logger.log(`🔄 Fetching fresh roster data for SAP ID: ${sapId}`);
+    const freshData = fetchTeamMemberDetailsFromSheet(sapId);
+    
+    // Store in cache for 24 hours if data was found
+    if (freshData) {
+      setCacheData(
+        cacheKey,
+        freshData,
+        CACHE_DURATIONS.ROSTER_LOOKUP
+      );
+    }
+    
+    return freshData;
+  } catch (error) {
+    Logger.log(`❌ Error in getCachedTeamMemberDetails: ${error.message}`);
+    // Fallback to direct fetch if caching fails
+    return fetchTeamMemberDetailsFromSheet(sapId);
+  }
+}
+
+/**
+ * Gets form structure with caching (1 hour cache)
+ * This is the main function that should be called by the application
+ * @returns {Object} Form structure object
+ */
+function getCachedFormStructure() {
+  try {
+    // Try to get from cache first
+    const cachedData = getCacheData(CACHE_KEYS.FORM_STRUCTURE);
+    if (cachedData) {
+      Logger.log("📦 Using cached form structure");
+      return cachedData;
+    }
+    
+    // Cache miss - build fresh structure
+    Logger.log("🔄 Building fresh form structure");
+    const freshData = buildFormStructure();
+    
+    // Store in cache for 1 hour
+    setCacheData(
+      CACHE_KEYS.FORM_STRUCTURE,
+      freshData,
+      CACHE_DURATIONS.FORM_STRUCTURE
+    );
+    
+    return freshData;
+  } catch (error) {
+    Logger.log(`❌ Error in getCachedFormStructure: ${error.message}`);
+    // Fallback to direct build if caching fails
+    return buildFormStructure();
+  }
+}
+
+/**
+ * Gets rubric details with permanent storage in Properties Service
+ * This is the main function that should be called by the application
+ * @returns {Object} Rubric details object
+ */
+function getCachedRubricDetails() {
+  try {
+    // Try to get from Properties Service first
+    const cachedData = getPropertyData(CACHE_KEYS.RUBRIC_DETAILS);
+    if (cachedData) {
+      Logger.log("📦 Using cached rubric details from Properties Service");
+      return cachedData;
+    }
+    
+    // Not in storage - build fresh rubric
+    Logger.log("🔄 Building fresh rubric details");
+    const freshData = buildRubricDetails();
+    
+    // Store in Properties Service (permanent)
+    setPropertyData(CACHE_KEYS.RUBRIC_DETAILS, freshData);
+    
+    return freshData;
+  } catch (error) {
+    Logger.log(`❌ Error in getCachedRubricDetails: ${error.message}`);
+    // Fallback to direct build if caching fails
+    return buildRubricDetails();
+  }
+}
+
 /**
  * Fetches dropdown options from the external configuration spreadsheet.
+ * INTERNAL FUNCTION - Use getCachedDropdownOptions() instead
  * @returns {Object} An object containing arrays of options for each dropdown field.
  */
-function getDropdownOptions() {
+function fetchDropdownOptionsFromSheet() {
   try {
     const ss = SpreadsheetApp.openById(DROPDOWN_SPREADSHEET_ID);
     const sheet = ss.getSheetByName(DROPDOWN_SHEET_NAME);
@@ -587,9 +961,12 @@ function debugRosterSheet() {
 }
 
 /**
- * Gets team member details from the roster sheet based on SAP ID.
+ * Fetches team member details from the roster sheet based on SAP ID.
+ * INTERNAL FUNCTION - Use getCachedTeamMemberDetails() instead
+ * @param {string} sapId - SAP ID to lookup
+ * @returns {Object|null} Team member details or null
  */
-function getTeamMemberDetails(sapId) {
+function fetchTeamMemberDetailsFromSheet(sapId) {
   if (!sapId) { 
     Logger.log("getTeamMemberDetails: No SAP ID provided");
     return null; 
@@ -695,12 +1072,13 @@ function rewriteText(text, type) {
 
 /**
  * Builds a detailed rubric string for the AI prompt.
+ * INTERNAL FUNCTION - Builds rubric from cached data
  * @returns {string} A formatted string of the entire rubric.
  */
 function buildAiRubricPrompt() {
-  const formStructure = getFormStructure();
-  const rubricDetails = getRubricDetails();
-  const dropdownOptions = getDropdownOptions();
+  const formStructure = getCachedFormStructure();
+  const rubricDetails = getCachedRubricDetails();
+  const dropdownOptions = getCachedDropdownOptions();
   let rubricString = "";
 
   formStructure.forEach(section => {
@@ -832,6 +1210,48 @@ function analyzeCallScript(scriptText) {
     Logger.log(`AI analysis failed: ${error.toString()}`);
     throw new Error(`AI analysis failed. Details: ${error.message}`);
   }
+}
+
+// --- BACKWARD COMPATIBILITY WRAPPERS ---
+
+/**
+ * Backward compatibility wrapper for getDropdownOptions
+ * @deprecated Use getCachedDropdownOptions() instead
+ * @returns {Object} Dropdown options object
+ */
+function getDropdownOptions() {
+  Logger.log("⚠️ Using deprecated getDropdownOptions() - consider using getCachedDropdownOptions()");
+  return getCachedDropdownOptions();
+}
+
+/**
+ * Backward compatibility wrapper for getTeamMemberDetails
+ * @deprecated Use getCachedTeamMemberDetails() instead
+ * @param {string} sapId - SAP ID to lookup
+ * @returns {Object|null} Team member details or null
+ */
+function getTeamMemberDetails(sapId) {
+  Logger.log("⚠️ Using deprecated getTeamMemberDetails() - consider using getCachedTeamMemberDetails()");
+  return getCachedTeamMemberDetails(sapId);
+}
+
+/**
+ * Backward compatibility wrapper for getFormStructure
+ * @deprecated Use getCachedFormStructure() instead
+ * @returns {Object} Form structure object
+ */
+function getFormStructure() {
+  Logger.log("⚠️ Using deprecated getFormStructure() - consider using getCachedFormStructure()");
+  return getCachedFormStructure();
+}
+
+/**
+ * Backward compatibility wrapper for getRubricDetails
+ * INTERNAL FUNCTION - Builds rubric details
+ * @returns {Object} Rubric details object
+ */
+function buildRubricDetails() {
+  return getRubricDetails();
 }
 
 /**
@@ -999,12 +1419,14 @@ function getRubricDetails() {
 }
 
 /**
- * Fetches the form structure with dynamic dropdown options.
+ * Builds the form structure with dynamic dropdown options.
+ * INTERNAL FUNCTION - Use getCachedFormStructure() instead
+ * @returns {Object} Form structure object
  */
-function getFormStructure() {
+function buildFormStructure() {
   try {
-    // Get dynamic dropdown options
-    const dropdownOptions = getDropdownOptions();
+    // Get dynamic dropdown options from cache
+    const dropdownOptions = getCachedDropdownOptions();
     
     const radioOptions = ["DW", "Prt", "DD", "NA"];
     const radioOptionsNoPrt = ["DW", "Prt-disabled", "DD", "NA"]; // For skills that don't have partial option - Prt will be disabled
